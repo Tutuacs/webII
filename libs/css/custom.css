@@ -1,0 +1,124 @@
+.left-margin {
+    margin: 0 .5em 0 0;
+}
+
+.right-button-margin {
+    margin: 0 0 1em 0;
+    overflow: hidden;
+}
+
+.ecom-body {
+    background-color: #f3f4f6;
+    color: #111111;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.ecom-navbar {
+    background: #ffdb15;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+.ecom-brand,
+.navbar-default .navbar-nav > li > a,
+.navbar-default .navbar-text {
+    color: #111111 !important;
+    font-weight: 600;
+}
+
+.ecom-search-group {
+    min-width: 300px;
+}
+
+.app-content {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    min-height: 0;
+}
+
+.app-content-products {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+section {
+    background: transparent !important;
+}
+
+.home-hero {
+    background: #ffffff;
+    color: #111111;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #d1d5db;
+}
+
+.products-hero {
+    margin-top: 0;
+}
+
+.products-query {
+    margin: 0 0 16px;
+    color: #4b5563;
+}
+
+.products-shell {
+    margin-bottom: 16px;
+    border: 1px solid #d1d5db;
+}
+
+.home-hero h1 {
+    margin-top: 0;
+}
+
+.product-card {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.product-title {
+    color: #111111;
+    min-height: 40px;
+}
+
+.product-image {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    background: #e5e7eb;
+    border-bottom: 1px solid #d1d5db;
+    display: block;
+}
+
+.product-description {
+    min-height: 44px;
+}
+
+.ecom-footer {
+    margin-top: auto;
+    padding: 14px 0;
+    background: #111111;
+    color: #ffffff;
+    text-align: center;
+}
+
+.modal-body {
+    padding: 20px 20px 0 20px !important;
+    text-align: center !important;
+}
+
+.modal-footer {
+    text-align: center !important;
+}
