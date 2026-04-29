@@ -1,47 +1,47 @@
 ﻿CREATE TABLE IF NOT EXISTS usuario (
-id INT GENERATED AS IDENTITY PRIMARY KEY,
-login VARCHAR(30) NOT NULL UNIQUE,
-senha VARCHAR(255) NOT NULL,
-nome VARCHAR(255) NOT NULL,
-role VARCHAR(20) NOT NULL DEFAULT 'INTERNO'
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(30) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'INTERNO'
 );
 
-INSERT INTO usuario(login, senha, nome, role) VALUES ('arthur','202cb962ac59075b964b07152d234b70','arthur','INTERNO'); -- arthur:123
-INSERT INTO usuario(login, senha, nome, role) VALUES ('vinicius','202cb962ac59075b964b07152d234b70','vinicius','INTERNO'); -- vinicius:123
+INSERT INTO usuario(login, senha, nome, role) VALUES ('arthur','202cb962ac59075b964b07152d234b70','arthur','INTERNO'); 
+INSERT INTO usuario(login, senha, nome, role) VALUES ('vinicius','202cb962ac59075b964b07152d234b70','vinicius','INTERNO'); 
 
 CREATE TABLE IF NOT EXISTS endereco (
-id INT GENERATED AS IDENTITY PRIMARY KEY,
-nome VARCHAR(255) NOT NULL,
-descricao TEXT,
-telefone VARCHAR(30),
-email VARCHAR(255)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    telefone VARCHAR(30),
+    email VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS fornecedor (
-id INT GENERATED AS IDENTITY PRIMARY KEY,
-nome VARCHAR(255) NOT NULL,
-descricao TEXT,
-telefone VARCHAR(30),
-email VARCHAR(255),
-endereco_id INT NULL,
-CONSTRAINT fk_fornecedor_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    telefone VARCHAR(30),
+    email VARCHAR(255),
+    endereco_id INT NULL,
+    CONSTRAINT fk_fornecedor_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id)
 );
 
 CREATE TABLE IF NOT EXISTS estoque (
-id INT GENERATED AS IDENTITY PRIMARY KEY,
-quantidade INT NOT NULL DEFAULT 0,
-preco DECIMAL(10,2) NOT NULL DEFAULT 0
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    quantidade INT NOT NULL DEFAULT 0,
+    preco DECIMAL(10,2) NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS produto (
-id INT GENERATED AS IDENTITY PRIMARY KEY,
-nome VARCHAR(255) NOT NULL,
-descricao TEXT,
-foto LONGBLOB NULL,
-fornecedor_id INT NOT NULL,
-estoque_id INT NOT NULL,
-CONSTRAINT fk_produto_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id),
-CONSTRAINT fk_produto_estoque FOREIGN KEY (estoque_id) REFERENCES estoque(id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    foto LONGBLOB NULL,
+    fornecedor_id INT NOT NULL,
+    estoque_id INT NOT NULL,
+    CONSTRAINT fk_produto_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id),
+    CONSTRAINT fk_produto_estoque FOREIGN KEY (estoque_id) REFERENCES estoque(id)
 );
 
 INSERT INTO endereco (nome, descricao, telefone, email) VALUES
