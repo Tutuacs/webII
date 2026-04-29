@@ -1,6 +1,6 @@
 <?php
 
-class UsuarioDAO extends ClasseDAO implements UsuarioDaoInterface
+class UsuarioDAO extends ClasseDAO implements IUsuarioDao
 {
     private $tableName = 'usuario';
 

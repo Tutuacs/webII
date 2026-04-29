@@ -1,6 +1,6 @@
 <?php
 
-class FornecedorDAO extends ClasseDAO implements DAO
+class FornecedorDAO extends ClasseDAO implements IFornecedorDao
 {
     private $tableName = 'fornecedor';
 

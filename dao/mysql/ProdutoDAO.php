@@ -1,6 +1,6 @@
 <?php
 
-class ProdutoDAO extends ClasseDAO implements DAO
+class ProdutoDAO extends ClasseDAO implements IProdutoDao
 {
     private $tableName = 'produto';
 

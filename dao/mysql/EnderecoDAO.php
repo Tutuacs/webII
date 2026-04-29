@@ -1,6 +1,6 @@
 <?php
 
-class EnderecoDAO extends ClasseDAO implements DAO
+class EnderecoDAO extends ClasseDAO implements IEnderecoDao
 {
     private $tableName = 'endereco';
 
