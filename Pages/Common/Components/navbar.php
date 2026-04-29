@@ -23,6 +23,8 @@ $showSearch = (strpos($currentUri, '/index.php') === 0 || strpos($currentUri, '/
         <ul class="nav navbar-nav">
             <li><a href="/index.php">Produtos</a></li>
             <?php if ($usuarioLogado && $roleUsuario === 'INTERNO') { ?>
+                <li><a href="/Pages/Products/list.php">Gerenciar Produtos</a></li>
+                <li><a href="/Pages/Stock/list.php">Estoque</a></li>
                 <li><a href="/Pages/Users/list.php">Usuários</a></li>
                 <li><a href="/Pages/Suppliers/list.php">Fornecedores</a></li>
             <?php } ?>
