@@ -1,10 +1,13 @@
-﻿CREATE TABLE IF NOT EXISTS usuario (
+﻿SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
+CREATE TABLE IF NOT EXISTS usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     login VARCHAR(30) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     nome VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'INTERNO'
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO usuario(login, senha, nome, role) VALUES ('arthur','202cb962ac59075b964b07152d234b70','arthur','INTERNO'); 
 INSERT INTO usuario(login, senha, nome, role) VALUES ('vinicius','202cb962ac59075b964b07152d234b70','vinicius','INTERNO'); 
@@ -15,7 +18,7 @@ CREATE TABLE IF NOT EXISTS endereco (
     descricao TEXT,
     telefone VARCHAR(30),
     email VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS fornecedor (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,13 +28,13 @@ CREATE TABLE IF NOT EXISTS fornecedor (
     email VARCHAR(255),
     endereco_id INT NULL,
     CONSTRAINT fk_fornecedor_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS estoque (
     id INT AUTO_INCREMENT PRIMARY KEY,
     quantidade INT NOT NULL DEFAULT 0,
     preco DECIMAL(10,2) NOT NULL DEFAULT 0
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS produto (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,7 +45,7 @@ CREATE TABLE IF NOT EXISTS produto (
     estoque_id INT NOT NULL,
     CONSTRAINT fk_produto_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id),
     CONSTRAINT fk_produto_estoque FOREIGN KEY (estoque_id) REFERENCES estoque(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO endereco (nome, descricao, telefone, email) VALUES
 ('Centro', 'Rua Principal, 100', '(54) 1111-1111', 'contato@fornecedor1.com'),
