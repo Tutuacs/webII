@@ -12,7 +12,7 @@ $searchContext = 'Produtos';
 $searchAction = '/index.php';
 $searchParam = 'q';
 $searchValue = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
-$showSearch = (strpos($currentUri, '/index.php') === 0 || strpos($currentUri, '/Pages/Products/') === 0 || $currentUri === '/');
+$showSearch = (strpos($currentUri, '/index.php') === 0 || $currentUri === '/');
 ?>
 <nav class="navbar navbar-default ecom-navbar">
     <div class="container-fluid">
