@@ -6,7 +6,10 @@ require_once __DIR__ . '/../Auth/session.php';
 require_internal_user();
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$factory->getEstoqueDao()->removePorId($id);
-
-header('Location: /Pages/Stock/list.php');
-exit;
+safe_remove_with_flash(
+	function () use ($factory, $id) {
+		$factory->getEstoqueDao()->removePorId($id);
+	},
+	'/Pages/Stock/list.php',
+	'estoque'
+);

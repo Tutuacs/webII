@@ -49,3 +49,22 @@ function require_internal_user(): void
         exit;
     }
 }
+
+function safe_remove_with_flash(callable $removeCallback, string $redirectPath, string $entityLabel = 'item'): void
+{
+    try {
+        $removeCallback();
+        set_flash_message('success', ucfirst($entityLabel) . ' excluído com sucesso.');
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '23000') {
+            set_flash_message('danger', 'Não é possível excluir este ' . $entityLabel . ' porque ele está relacionado a outros registros.');
+        } else {
+            set_flash_message('danger', 'Não foi possível excluir este ' . $entityLabel . '.');
+        }
+    } catch (Throwable $e) {
+        set_flash_message('danger', 'Não foi possível excluir este ' . $entityLabel . '.');
+    }
+
+    header('Location: ' . $redirectPath);
+    exit;
+}

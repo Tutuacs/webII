@@ -6,7 +6,10 @@ require_once __DIR__ . '/../Auth/session.php';
 require_internal_user();
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$factory->getUsuarioDao()->removePorId($id);
-
-header('Location: /Pages/Users/list.php');
-exit;
+safe_remove_with_flash(
+	function () use ($factory, $id) {
+		$factory->getUsuarioDao()->removePorId($id);
+	},
+	'/Pages/Users/list.php',
+	'usuário'
+);
