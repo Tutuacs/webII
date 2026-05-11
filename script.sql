@@ -30,22 +30,28 @@ CREATE TABLE IF NOT EXISTS fornecedor (
     CONSTRAINT fk_fornecedor_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS estoque (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    quantidade INT NOT NULL DEFAULT 0,
-    preco DECIMAL(10,2) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS produto (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     descricao TEXT,
     foto LONGBLOB NULL,
     fornecedor_id INT NOT NULL,
-    estoque_id INT NOT NULL,
-    CONSTRAINT fk_produto_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id),
-    CONSTRAINT fk_produto_estoque FOREIGN KEY (estoque_id) REFERENCES estoque(id)
+    estoque_id INT NULL,
+    UNIQUE KEY uq_produto_estoque_id (estoque_id),
+    CONSTRAINT fk_produto_fornecedor FOREIGN KEY (fornecedor_id) REFERENCES fornecedor(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS estoque (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    quantidade INT NOT NULL DEFAULT 0,
+    preco DECIMAL(10,2) NOT NULL DEFAULT 0,
+    produto_id INT NOT NULL,
+    INDEX idx_estoque_produto_id (produto_id),
+    CONSTRAINT fk_estoque_produto FOREIGN KEY (produto_id) REFERENCES produto(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE produto
+    ADD CONSTRAINT fk_produto_estoque FOREIGN KEY (estoque_id) REFERENCES estoque(id) ON DELETE SET NULL ON UPDATE CASCADE;
 
 INSERT INTO endereco (nome, descricao, telefone, email) VALUES
 ('Centro', 'Rua Principal, 100', '(54) 1111-1111', 'contato@fornecedor1.com'),
@@ -55,12 +61,16 @@ INSERT INTO fornecedor (nome, descricao, telefone, email, endereco_id) VALUES
 ('Fornecedor Sul', 'Fornecedor de eletrônicos', '(54) 3333-3333', 'vendas@sul.com', 1),
 ('Fornecedor Norte', 'Fornecedor de acessórios', '(54) 4444-4444', 'vendas@norte.com', 2);
 
-INSERT INTO estoque (quantidade, preco) VALUES
-(15, 1999.90),
-(8, 299.90),
-(0, 129.90);
-
 INSERT INTO produto (nome, descricao, foto, fornecedor_id, estoque_id) VALUES
-('Notebook Pro 14', 'Notebook para trabalho e estudo', NULL, 1, 1),
-('Mouse Sem Fio', 'Mouse ergonômico com conexão 2.4G', NULL, 2, 2),
-('Teclado Mecânico', 'Modelo com switches táteis', NULL, 2, 3);
+('Notebook Pro 14', 'Notebook para trabalho e estudo', NULL, 1, NULL),
+('Mouse Sem Fio', 'Mouse ergonômico com conexão 2.4G', NULL, 2, NULL),
+('Teclado Mecânico', 'Modelo com switches táteis', NULL, 2, NULL);
+
+INSERT INTO estoque (quantidade, preco, produto_id) VALUES
+(15, 1999.90, 1),
+(8, 299.90, 2),
+(0, 129.90, 3);
+
+UPDATE produto p
+INNER JOIN estoque e ON e.produto_id = p.id
+SET p.estoque_id = e.id;

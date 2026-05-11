@@ -2,7 +2,7 @@
 
 abstract class DaoFactory
 {
-    abstract protected function getConnection();
+    abstract public function getConnection();
 
     abstract public function getUsuarioDao();
 

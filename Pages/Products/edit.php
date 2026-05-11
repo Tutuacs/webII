@@ -17,7 +17,8 @@ $page_title = 'Editar Produto';
 include_once __DIR__ . '/../Common/layout_header.php';
 
 $fornecedores = $factory->getFornecedorDao()->buscaTodos();
-$estoques = $factory->getEstoqueDao()->buscaTodos();
+$estoqueAtivo = $produto->getEstoqueId() ? $factory->getEstoqueDao()->buscaPorId($produto->getEstoqueId()) : null;
+$todosEstoques = $factory->getEstoqueDao()->buscaPorProdutoId($produto->getId());
 ?>
 <section class="row">
     <div class="col-md-8">
@@ -42,17 +43,47 @@ $estoques = $factory->getEstoqueDao()->buscaTodos();
                     <?php } ?>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="estoque_id">Estoque</label>
-                <select id="estoque_id" name="estoque_id" class="form-control" required>
-                    <option value="">Selecione um estoque</option>
-                    <?php foreach ($estoques as $estoque) { ?>
-                        <option value="<?php echo (int) $estoque->getId(); ?>" <?php echo (int) $estoque->getId() === (int) $produto->getEstoqueId() ? 'selected' : ''; ?>>
-                            ID: <?php echo (int) $estoque->getId(); ?> - Qtd: <?php echo (int) $estoque->getQuantidade(); ?> - R$ <?php echo number_format($estoque->getPreco(), 2, ',', '.'); ?>
-                        </option>
-                    <?php } ?>
-                </select>
+            
+            <hr>
+            <h4>Estoque Selecionado (Ativo)</h4>
+            
+            <?php if (!empty($todosEstoques)) { ?>
+                <div class="form-group">
+                    <label for="estoque_id">Escolher estoque ativo</label>
+                    <select id="estoque_id" name="estoque_id" class="form-control" required>
+                        <option value="">Nenhum estoque selecionado</option>
+                        <?php foreach ($todosEstoques as $e) { ?>
+                            <option value="<?php echo (int) $e->getId(); ?>" <?php echo $estoqueAtivo && (int) $e->getId() === (int) $estoqueAtivo->getId() ? 'selected' : ''; ?>>
+                                Estoque #<?php echo (int) $e->getId(); ?> - Qtd: <?php echo (int) $e->getQuantidade(); ?> - R$ <?php echo number_format($e->getPreco(), 2, ',', '.'); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+            <?php } ?>
+            
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label for="quantidade">Quantidade do estoque ativo</label>
+                    <input type="number" id="quantidade" name="quantidade" class="form-control" min="0" value="<?php echo $estoqueAtivo ? (int) $estoqueAtivo->getQuantidade() : 0; ?>" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="preco">Preço do estoque ativo</label>
+                    <input type="text" id="preco" name="preco" class="form-control" value="<?php echo $estoqueAtivo ? htmlspecialchars(number_format($estoqueAtivo->getPreco(), 2, ',', '.'), ENT_QUOTES, 'UTF-8') : '0,00'; ?>" required>
+                </div>
             </div>
+            <p class="help-block"><strong>Nota:</strong> Quantity e preço acima referem-se ao estoque selecionado. Este produto pode ter outros estoques alternativos, mas apenas um é considerado "ativo".</p>
+            
+            <?php if (count($todosEstoques) > 1) { ?>
+                <p class="help-block">
+                    <strong>Outros estoques disponíveis:</strong><br>
+                    <?php foreach ($todosEstoques as $e) { ?>
+                        <?php if (!$estoqueAtivo || (int) $e->getId() !== (int) $estoqueAtivo->getId()) { ?>
+                            Estoque #<?php echo (int) $e->getId(); ?> - Qtd: <?php echo (int) $e->getQuantidade(); ?> - R$ <?php echo number_format($e->getPreco(), 2, ',', '.'); ?><br>
+                        <?php } ?>
+                    <?php } ?>
+                </p>
+            <?php } ?>
+            
             <button type="submit" class="btn btn-primary">Atualizar</button>
             <a href="/Pages/Products/list.php" class="btn btn-default">Cancelar</a>
         </form>

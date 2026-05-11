@@ -32,11 +32,11 @@ ItemPedido:
 • quantidade - Integer
 • preco - Integer
 
-Estoque:(0-*Estoque)
+Estoque:(0-*Produto)
 • quantidade - Integer
 • preco - Double
 
-Produto:(1-Fornecedor) && (1Estoque)
+Produto:(1-Fornecedor) && (0-*Estoque com 1 ativo)
 • nome - String
 • descricao - String
 • foto - byte[]
@@ -84,6 +84,16 @@ pedido.
 • Deverá ser construída API REST que permita a consulta dos pedidos, também pelo
 número do pedido ou pelo nome do cliente. Essa API deverá ser acessada através de
 um plugin REST do navegador.
+
+Observação da implementação atual:
+• Produto pode ter múltiplos estoques (relação 1:N).
+• Um estoque não pode trocar de produto (chave permanente).
+• Um produto tem um estoque "ativo/selecionado" que é usado para quantidade/preço.
+• A criação de produto inclui a criação do estoque inicial vinculado.
+• A edição de produto atualiza o estoque ativo.
+• Novos estoques podem ser adicionados a um produto existente (para ofertas alternativas).
+• A listagem de estoques busca por nome do produto, não por ID.
+
 A aplicação deverá ser implementada utilizando layout responsivo e deverá ser
 possível utilizá-la em um aparelho celeular sem problemas de usabilidade. O layout
 também será avaliado, portanto caprichem no CSS.

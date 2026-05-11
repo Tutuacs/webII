@@ -18,7 +18,7 @@ class MysqlDaoFactory extends DaoFactory
         $this->password = getenv('DB_PASSWORD') ?: 'root';
     }
 
-    protected function getConnection()
+    public function getConnection()
     {
         if ($this->connection instanceof PDO) {
             return $this->connection;

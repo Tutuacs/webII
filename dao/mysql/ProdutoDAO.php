@@ -13,7 +13,12 @@ class ProdutoDAO extends ClasseDAO implements IProdutoDao
         $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId());
         $stmt->bindValue(':estoque_id', $produto->getEstoqueId());
 
-        return $stmt->execute();
+        $executed = $stmt->execute();
+        if ($executed) {
+            $produto->setId((int) $this->conn->lastInsertId());
+        }
+
+        return $executed;
     }
 
     public function altera(&$produto)
