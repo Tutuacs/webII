@@ -22,7 +22,7 @@ $todosEstoques = $factory->getEstoqueDao()->buscaPorProdutoId($produto->getId())
 ?>
 <section class="row">
     <div class="col-md-8">
-        <form action="/Service/Products/update_action.php" method="post" class="panel panel-default" style="padding:20px;">
+        <form action="/Service/Products/update_action.php" method="post" enctype="multipart/form-data" class="panel panel-default" style="padding:20px;">
             <input type="hidden" name="id" value="<?php echo (int) $produto->getId(); ?>">
             <div class="form-group">
                 <label for="nome">Nome</label>
@@ -31,6 +31,20 @@ $todosEstoques = $factory->getEstoqueDao()->buscaPorProdutoId($produto->getId())
             <div class="form-group">
                 <label for="descricao">Descrição</label>
                 <textarea id="descricao" name="descricao" class="form-control" rows="4"><?php echo htmlspecialchars($produto->getDescricao(), ENT_QUOTES, 'UTF-8'); ?></textarea>
+            </div>
+            <div class="form-group">
+                <label>Foto do produto</label>
+                <?php if ($produto->getFoto()) { ?>
+                    <div style="margin-bottom:10px;">
+                        <img src="/Service/Products/foto.php?id=<?php echo (int) $produto->getId(); ?>"
+                             alt="Foto atual"
+                             style="max-height:160px; max-width:100%; border:1px solid #ddd; border-radius:4px; padding:4px;">
+                        <p class="help-block">Foto atual. Envie uma nova para substituir.</p>
+                    </div>
+                    <input type="hidden" name="manter_foto" value="1">
+                <?php } ?>
+                <input type="file" id="foto" name="foto" class="form-control" accept="image/*">
+                <p class="help-block">Opcional. Formatos aceitos: JPG, PNG, GIF, WebP.</p>
             </div>
             <div class="form-group">
                 <label for="fornecedor_id">Fornecedor</label>
@@ -71,7 +85,7 @@ $todosEstoques = $factory->getEstoqueDao()->buscaPorProdutoId($produto->getId())
                     <input type="text" id="preco" name="preco" class="form-control" value="<?php echo $estoqueAtivo ? htmlspecialchars(number_format($estoqueAtivo->getPreco(), 2, ',', '.'), ENT_QUOTES, 'UTF-8') : '0,00'; ?>" required>
                 </div>
             </div>
-            <p class="help-block"><strong>Nota:</strong> Quantity e preço acima referem-se ao estoque selecionado. Este produto pode ter outros estoques alternativos, mas apenas um é considerado "ativo".</p>
+            <p class="help-block"><strong>Nota:</strong> Quantidade e preço acima referem-se ao estoque selecionado. Este produto pode ter outros estoques alternativos, mas apenas um é considerado "ativo".</p>
             
             <?php if (count($todosEstoques) > 1) { ?>
                 <p class="help-block">

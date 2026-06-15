@@ -11,7 +11,7 @@ $fornecedores = $factory->getFornecedorDao()->buscaTodos();
 ?>
 <section class="row">
     <div class="col-md-8">
-        <form action="/Service/Products/create_action.php" method="post" class="panel panel-default" style="padding:20px;">
+        <form action="/Service/Products/create_action.php" method="post" enctype="multipart/form-data" class="panel panel-default" style="padding:20px;">
             <div class="form-group">
                 <label for="nome">Nome</label>
                 <input type="text" id="nome" name="nome" class="form-control" required>
@@ -19,6 +19,11 @@ $fornecedores = $factory->getFornecedorDao()->buscaTodos();
             <div class="form-group">
                 <label for="descricao">Descrição</label>
                 <textarea id="descricao" name="descricao" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="foto">Foto do produto</label>
+                <input type="file" id="foto" name="foto" class="form-control" accept="image/*">
+                <p class="help-block">Opcional. Formatos aceitos: JPG, PNG, GIF, WebP.</p>
             </div>
             <div class="form-group">
                 <label for="fornecedor_id">Fornecedor</label>
