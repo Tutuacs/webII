@@ -9,21 +9,32 @@ $page_title = 'Estoque';
 $dao = $factory->getEstoqueDao();
 $produtoDao = $factory->getProdutoDao();
 
-$filtro = isset($_GET['filtro']) ? trim((string) $_GET['filtro']) : 'id';
-$busca = isset($_GET['busca']) ? trim((string) $_GET['busca']) : '';
-$q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
-
-if ($q !== '' && $busca === '') {
-    $busca = $q;
-    $filtro = 'id';
-}
+$busca = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
 
 if ($busca !== '') {
-    if ($filtro === 'id') {
-        $estoques = $dao->buscaPorId((int) $busca);
-        $estoques = $estoques ? [$estoques] : [];
-    } else {
-        $estoques = $dao->buscaPorNome($busca);
+    $estoques = [];
+
+    // Se for número, busca o estoque pelo próprio ID
+    if (ctype_digit($busca)) {
+        $porId = $dao->buscaPorId((int) $busca);
+        if ($porId) {
+            $estoques[] = $porId;
+        }
+    }
+
+    // Sempre busca também pelo nome do produto vinculado
+    $porNome = $dao->buscaPorNome($busca);
+    foreach ($porNome as $e) {
+        $jaExiste = false;
+        foreach ($estoques as $existente) {
+            if ($existente->getId() === $e->getId()) {
+                $jaExiste = true;
+                break;
+            }
+        }
+        if (!$jaExiste) {
+            $estoques[] = $e;
+        }
     }
 } else {
     $estoques = $dao->buscaTodos();
@@ -38,17 +49,17 @@ include_once __DIR__ . '/../Common/layout_header.php';
 
     <form method="get" class="form-inline" style="margin-bottom: 20px;">
         <div class="form-group">
-            <select name="filtro" class="form-control">
-                <option value="id" <?php echo $filtro === 'id' ? 'selected' : ''; ?>>ID do Estoque</option>
-                <option value="nome" <?php echo $filtro === 'nome' ? 'selected' : ''; ?>>Nome do Produto</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <input type="text" name="busca" value="<?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?>" class="form-control" placeholder="Pesquisar estoque ou produto">
+            <input type="text" name="q" value="<?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?>" class="form-control" placeholder="Buscar por ID ou nome do produto..." style="min-width: 260px;">
         </div>
         <button type="submit" class="btn btn-default">Buscar</button>
-        <a href="/Pages/Stock/list.php" class="btn btn-link">Limpar</a>
+        <?php if ($busca !== '') { ?>
+            <a href="/Pages/Stock/list.php" class="btn btn-link">Limpar</a>
+        <?php } ?>
     </form>
+
+    <?php if ($busca !== '') { ?>
+        <p>Resultados para: <strong><?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+    <?php } ?>
 
     <?php if ($estoques) { ?>
         <div class="table-responsive">
@@ -62,7 +73,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($estoques as $estoque) { 
+                <?php foreach ($estoques as $estoque) {
                     $produto = $produtoDao->buscaPorId($estoque->getProdutoId());
                 ?>
                     <tr>

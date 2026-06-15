@@ -8,21 +8,32 @@ require_internal_user();
 $page_title = 'Produtos';
 $dao = $factory->getProdutoDao();
 
-$filtro = isset($_GET['filtro']) ? trim((string) $_GET['filtro']) : 'nome';
-$busca = isset($_GET['busca']) ? trim((string) $_GET['busca']) : '';
-$q = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
-
-if ($q !== '' && $busca === '') {
-    $busca = $q;
-    $filtro = ctype_digit($q) ? 'codigo' : 'nome';
-}
+$busca = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
 
 if ($busca !== '') {
-    if ($filtro === 'codigo') {
-        $produtos = $dao->buscaPorId((int) $busca);
-        $produtos = $produtos ? [$produtos] : [];
-    } else {
-        $produtos = $dao->buscaPorNome($busca);
+    $produtos = [];
+
+    // Se for número, busca por ID e acumula
+    if (ctype_digit($busca)) {
+        $porId = $dao->buscaPorId((int) $busca);
+        if ($porId) {
+            $produtos[] = $porId;
+        }
+    }
+
+    // Sempre busca por nome também e mescla (sem duplicatas)
+    $porNome = $dao->buscaPorNome($busca);
+    foreach ($porNome as $p) {
+        $jaExiste = false;
+        foreach ($produtos as $existente) {
+            if ($existente->getId() === $p->getId()) {
+                $jaExiste = true;
+                break;
+            }
+        }
+        if (!$jaExiste) {
+            $produtos[] = $p;
+        }
     }
 } else {
     $produtos = $dao->buscaTodos();
@@ -37,17 +48,17 @@ include_once __DIR__ . '/../Common/layout_header.php';
 
     <form method="get" class="form-inline" style="margin-bottom: 20px;">
         <div class="form-group">
-            <select name="filtro" class="form-control">
-                <option value="nome" <?php echo $filtro === 'codigo' ? '' : 'selected'; ?>>Nome</option>
-                <option value="codigo" <?php echo $filtro === 'codigo' ? 'selected' : ''; ?>>Código</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <input type="text" name="busca" value="<?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?>" class="form-control" placeholder="Pesquisar produto">
+            <input type="text" name="q" value="<?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?>" class="form-control" placeholder="Buscar por código ou nome..." style="min-width: 260px;">
         </div>
         <button type="submit" class="btn btn-default">Buscar</button>
-        <a href="/Pages/Products/list.php" class="btn btn-link">Limpar</a>
+        <?php if ($busca !== '') { ?>
+            <a href="/Pages/Products/list.php" class="btn btn-link">Limpar</a>
+        <?php } ?>
     </form>
+
+    <?php if ($busca !== '') { ?>
+        <p>Resultados para: <strong><?php echo htmlspecialchars($busca, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+    <?php } ?>
 
     <?php if ($produtos) { ?>
         <div class="table-responsive">
