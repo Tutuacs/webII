@@ -64,9 +64,71 @@ class ItemPedidoDAO extends ClasseDAO implements IItemPedidoDao
         return $itens;
     }
 
+    public function buscaPorPedidoId($pedidoId)
+    {
+        $stmt = $this->conn->prepare('SELECT id, quantidade, preco, pedido_id, produto_id FROM ' . $this->tableName . ' WHERE pedido_id = :pedido_id ORDER BY id ASC');
+        $stmt->bindValue(':pedido_id', $pedidoId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $itens = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $itens[] = new ItemPedido($row['id'], $row['quantidade'], $row['preco'], $row['pedido_id'], $row['produto_id']);
+        }
+
+        return $itens;
+    }
+
     public function buscaTodos()
     {
         $stmt = $this->conn->prepare('SELECT id, quantidade, preco, pedido_id, produto_id FROM ' . $this->tableName . ' ORDER BY id ASC');
+        $stmt->execute();
+
+        $itens = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $itens[] = new ItemPedido($row['id'], $row['quantidade'], $row['preco'], $row['pedido_id'], $row['produto_id']);
+        }
+
+        return $itens;
+    }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function contaTodos()
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contaPorPedidoId($pedidoId)
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE pedido_id = :pedido_id');
+        $stmt->bindValue(':pedido_id', $pedidoId, PDO::PARAM_INT);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function buscaTodosPaginado($limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, quantidade, preco, pedido_id, produto_id FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $itens = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $itens[] = new ItemPedido($row['id'], $row['quantidade'], $row['preco'], $row['pedido_id'], $row['produto_id']);
+        }
+
+        return $itens;
+    }
+
+    public function buscaPorPedidoIdPaginado($pedidoId, $limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, quantidade, preco, pedido_id, produto_id FROM ' . $this->tableName . ' WHERE pedido_id = :pedido_id ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':pedido_id', $pedidoId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         $itens = [];

@@ -78,4 +78,52 @@ class ClienteDAO extends ClasseDAO implements IClienteDao
 
         return $clientes;
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function contaTodos()
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contaPorNome($nome)
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE nome LIKE :nome');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function buscaTodosPaginado($limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, nome, telefone, email, cartao_credito, endereco_id FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $clientes = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $clientes[] = new Cliente($row['id'], $row['nome'], $row['telefone'], $row['email'], $row['cartao_credito'], $row['endereco_id']);
+        }
+
+        return $clientes;
+    }
+
+    public function buscaPorNomePaginado($nome, $limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, nome, telefone, email, cartao_credito, endereco_id FROM ' . $this->tableName . ' WHERE nome LIKE :nome ORDER BY nome LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $clientes = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $clientes[] = new Cliente($row['id'], $row['nome'], $row['telefone'], $row['email'], $row['cartao_credito'], $row['endereco_id']);
+        }
+
+        return $clientes;
+    }
 }
