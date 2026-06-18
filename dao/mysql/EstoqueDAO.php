@@ -93,4 +93,52 @@ class EstoqueDAO extends ClasseDAO implements IEstoqueDao
 
         return $estoques;
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function contaTodos()
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contaPorNome($nome)
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' e INNER JOIN produto p ON e.produto_id = p.id WHERE p.nome LIKE :nome');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function buscaTodosPaginado($limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, quantidade, preco, produto_id FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $estoques = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $estoques[] = new Estoque($row['id'], $row['quantidade'], $row['preco'], $row['produto_id']);
+        }
+
+        return $estoques;
+    }
+
+    public function buscaPorNomePaginado($nome, $limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT e.id, e.quantidade, e.preco, e.produto_id FROM ' . $this->tableName . ' e INNER JOIN produto p ON e.produto_id = p.id WHERE p.nome LIKE :nome ORDER BY p.nome, e.id LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $estoques = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $estoques[] = new Estoque($row['id'], $row['quantidade'], $row['preco'], $row['produto_id']);
+        }
+
+        return $estoques;
+    }
 }

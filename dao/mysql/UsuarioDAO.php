@@ -97,4 +97,52 @@ class UsuarioDAO extends ClasseDAO implements IUsuarioDao
 
         return $usuarios;
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function contaTodos()
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contaPorNome($nome)
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE nome LIKE :nome');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function buscaTodosPaginado($limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, login, senha, nome, role FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['role'] ?? 'INTERNO');
+        }
+
+        return $usuarios;
+    }
+
+    public function buscaPorNomePaginado($nome, $limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, login, senha, nome, role FROM ' . $this->tableName . ' WHERE nome LIKE :nome ORDER BY nome LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['role'] ?? 'INTERNO');
+        }
+
+        return $usuarios;
+    }
 }

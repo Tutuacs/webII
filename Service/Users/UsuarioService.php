@@ -38,4 +38,28 @@ class UsuarioService
     {
         return $this->usuarioDao->remove($usuario);
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function listarPaginado($page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->usuarioDao->buscaTodosPaginado($perPage, $offset);
+    }
+
+    public function buscarPorNomePaginado($nome, $page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->usuarioDao->buscaPorNomePaginado($nome, $perPage, $offset);
+    }
+
+    public function contarTodos()
+    {
+        return $this->usuarioDao->contaTodos();
+    }
+
+    public function contarPorNome($nome)
+    {
+        return $this->usuarioDao->contaPorNome($nome);
+    }
 }

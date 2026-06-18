@@ -84,4 +84,52 @@ class FornecedorDAO extends ClasseDAO implements IFornecedorDao
 
         return $fornecedores;
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function contaTodos()
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contaPorNome($nome)
+    {
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE nome LIKE :nome');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function buscaTodosPaginado($limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email, endereco_id FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $fornecedores = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email'], $row['endereco_id']);
+        }
+
+        return $fornecedores;
+    }
+
+    public function buscaPorNomePaginado($nome, $limit, $offset)
+    {
+        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email, endereco_id FROM ' . $this->tableName . ' WHERE nome LIKE :nome ORDER BY nome LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $fornecedores = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email'], $row['endereco_id']);
+        }
+
+        return $fornecedores;
+    }
 }

@@ -102,4 +102,28 @@ class EstoqueService
     {
         return $this->estoqueDao->remove($estoque);
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function listarPaginado($page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->estoqueDao->buscaTodosPaginado($perPage, $offset);
+    }
+
+    public function buscarPorNomePaginado($nome, $page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->estoqueDao->buscaPorNomePaginado($nome, $perPage, $offset);
+    }
+
+    public function contarTodos()
+    {
+        return $this->estoqueDao->contaTodos();
+    }
+
+    public function contarPorNome($nome)
+    {
+        return $this->estoqueDao->contaPorNome($nome);
+    }
 }

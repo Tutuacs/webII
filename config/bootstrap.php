@@ -12,6 +12,7 @@ spl_autoload_register(function (string $class): void {
         $baseDir . 'Service/Suppliers/' . $class . '.php',
         $baseDir . 'Service/Products/' . $class . '.php',
         $baseDir . 'Service/Stock/' . $class . '.php',
+        $baseDir . 'Service/Addresses/' . $class . '.php',
         $baseDir . 'Pages/Common/' . $class . '.php',
     ];
 

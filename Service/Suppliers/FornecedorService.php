@@ -38,4 +38,28 @@ class FornecedorService
     {
         return $this->fornecedorDao->remove($fornecedor);
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function listarPaginado($page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->fornecedorDao->buscaTodosPaginado($perPage, $offset);
+    }
+
+    public function buscarPorNomePaginado($nome, $page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->fornecedorDao->buscaPorNomePaginado($nome, $perPage, $offset);
+    }
+
+    public function contarTodos()
+    {
+        return $this->fornecedorDao->contaTodos();
+    }
+
+    public function contarPorNome($nome)
+    {
+        return $this->fornecedorDao->contaPorNome($nome);
+    }
 }

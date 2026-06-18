@@ -96,4 +96,28 @@ class ProdutoService
     {
         return $this->produtoDao->remove($produto);
     }
+
+    // ── Paginação ──────────────────────────────────────────────────────────────
+
+    public function listarPaginado($page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->produtoDao->buscaTodosPaginado($perPage, $offset);
+    }
+
+    public function buscarPorNomePaginado($nome, $page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->produtoDao->buscaPorNomePaginado($nome, $perPage, $offset);
+    }
+
+    public function contarTodos()
+    {
+        return $this->produtoDao->contaTodos();
+    }
+
+    public function contarPorNome($nome)
+    {
+        return $this->produtoDao->contaPorNome($nome);
+    }
 }
