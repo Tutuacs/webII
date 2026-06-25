@@ -30,18 +30,54 @@ function get_product_image_src(Produto $produto): string
 
 function render_product_card(Produto $produto, bool $isLogged, string $returnPath): void
 {
+    global $factory; 
+
     $nome = normalize_product_text($produto->getNome());
     $descricao = normalize_product_text((string) $produto->getDescricao());
     $addUrl = '/Service/Products/add_to_cart.php?produto_id=' . (int) $produto->getId() . '&return=' . urlencode($returnPath);
-    $buttonLabel = $isLogged ? 'Adicionar ao carrinho' : 'Entrar para comprar';
+    
+    $estoqueZerado = false;
+    try {
+        $estoqueId = $produto->getEstoqueId();
+        if ($estoqueId) {
+            $estoque = $factory->getEstoqueDao()->buscaPorId((int)$estoqueId);
+            if (!$estoque || $estoque->getQuantidade() <= 0) {
+                $estoqueZerado = true;
+            }
+        } else {
+            $estoqueZerado = true; 
+        }
+    } catch (Throwable $e) {
+      
+        $estoqueZerado = false;
+    }
+
+    
+    if ($estoqueZerado) {
+        $buttonLabel = 'Indisponível';
+        $buttonClass = 'btn-danger disabled';
+        $addUrl = '#'; 
+    } else {
+        $buttonLabel = $isLogged ? 'Adicionar ao carrinho' : 'Entrar para comprar';
+        $buttonClass = 'btn-primary';
+    }
     ?>
     <div class="panel panel-default product-card">
         <img class="product-image" src="<?php echo htmlspecialchars(get_product_image_src($produto), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?>">
         <div class="panel-body">
             <h4 class="product-title"><?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?></h4>
             <p class="text-muted product-description"><?php echo htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8'); ?></p>
-            <p><strong>Produto #<?php echo (int) $produto->getId(); ?></strong></p>
-            <a class="btn btn-primary btn-sm btn-block" href="<?php echo htmlspecialchars($addUrl, ENT_QUOTES, 'UTF-8'); ?>"><?php echo $buttonLabel; ?></a>
+            <p>
+                <strong>Produto #<?php echo (int) $produto->getId(); ?></strong>
+                <?php if ($estoqueZerado) { ?>
+                    <span class="label label-danger pull-right">Esgotado</span>
+                <?php } ?>
+            </p>
+            <a class="btn <?php echo $buttonClass; ?> btn-sm btn-block" 
+               href="<?php echo htmlspecialchars($addUrl, ENT_QUOTES, 'UTF-8'); ?>"
+               <?php echo $estoqueZerado ? 'style="pointer-events: none; cursor: not-allowed;"' : ''; ?>>
+                <?php echo $buttonLabel; ?>
+            </a>
         </div>
     </div>
     <?php

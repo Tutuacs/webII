@@ -19,6 +19,11 @@ class EnderecoService
         return $this->enderecoDao->buscaPorId($id);
     }
 
+    public function buscarPorRua($rua)
+    {
+        return $this->enderecoDao->buscaPorRua($rua);
+    }
+
     public function buscarPorNome($nome)
     {
         return $this->enderecoDao->buscaPorNome($nome);
@@ -52,10 +57,16 @@ class EnderecoService
         return $this->enderecoDao->buscaTodosPaginado($perPage, $offset);
     }
 
+    public function buscarPorRuaPaginado($rua, $page, $perPage)
+    {
+        $offset = ($page - 1) * $perPage;
+        return $this->enderecoDao->buscaPorRuaPaginado($rua, $perPage, $offset);
+    }
+
     public function buscarPorNomePaginado($nome, $page, $perPage)
     {
         $offset = ($page - 1) * $perPage;
-        return $this->enderecoDao->buscaPorNomePaginado($nome, $perPage, $offset);
+        return $this->enderecoDao->buscaPorRuaPaginado($nome, $perPage, $offset);
     }
 
     public function contarTodos()
@@ -63,8 +74,13 @@ class EnderecoService
         return $this->enderecoDao->contaTodos();
     }
 
+    public function contarPorRua($rua)
+    {
+        return $this->enderecoDao->contaPorRua($rua);
+    }
+
     public function contarPorNome($nome)
     {
-        return $this->enderecoDao->contaPorNome($nome);
+        return $this->enderecoDao->contaPorRua($nome);
     }
 }

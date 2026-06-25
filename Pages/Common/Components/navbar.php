@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../Service/Auth/session.php';
+require_once __DIR__ . '/../../../Service/Cart/CartService.php';
 
 ensure_session_started();
 
@@ -13,6 +14,9 @@ $searchAction = '/index.php';
 $searchParam = 'q';
 $searchValue = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
 $showSearch = (strpos($currentUri, '/index.php') === 0 || $currentUri === '/');
+
+$navbarCartService = new CartService($factory);
+$itensNoCarrinho = $navbarCartService->getCartItemCount(); 
 ?>
 <nav class="navbar navbar-default ecom-navbar">
     <div class="container-fluid">
@@ -43,6 +47,17 @@ $showSearch = (strpos($currentUri, '/index.php') === 0 || $currentUri === '/');
         <?php } ?>
 
         <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a href="/Pages/Products/cart.php">
+                    <span class="glyphicon glyphicon-shopping-cart"></span> Carrinho
+                    <?php if ($itensNoCarrinho > 0) { ?>
+                        <span class="label label-success" style="margin-left: 5px; font-size: 11px;">
+                            <?php echo $itensNoCarrinho; ?>
+                        </span>
+                    <?php } ?>
+                </a>
+            </li>
+
             <?php if ($usuarioLogado) {
                 $perfil = $roleUsuario ? ' (' . $roleUsuario . ')' : '';
             ?>

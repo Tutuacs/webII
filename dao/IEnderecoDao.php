@@ -2,9 +2,11 @@
 interface IEnderecoDao extends DAO
 {
     public function contaTodos();
-    public function contaPorNome($nome);
+    public function contaPorRua($rua);
     public function buscaTodosPaginado($limit, $offset);
-    public function buscaPorNomePaginado($nome, $limit, $offset);
+    public function buscaPorRuaPaginado($rua, $limit, $offset);
+    
+    public function buscaPorRua($rua); 
 }
 
 ?>

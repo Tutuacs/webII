@@ -4,24 +4,46 @@ class EnderecoDAO extends ClasseDAO implements IEnderecoDao
 {
     private $tableName = 'endereco';
 
+    public function buscaPorNome($nome)
+    {
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' WHERE rua LIKE :nome ORDER BY rua');
+        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt->execute();
+
+        $enderecos = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $enderecos[] = new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']);
+        }
+
+        return $enderecos;
+    }
+
     public function insere($endereco)
     {
-        $stmt = $this->conn->prepare('INSERT INTO ' . $this->tableName . ' (nome, descricao, telefone, email) VALUES (:nome, :descricao, :telefone, :email)');
-        $stmt->bindValue(':nome', $endereco->getNome());
-        $stmt->bindValue(':descricao', $endereco->getDescricao());
-        $stmt->bindValue(':telefone', $endereco->getTelefone());
-        $stmt->bindValue(':email', $endereco->getEmail());
+        $stmt = $this->conn->prepare('INSERT INTO ' . $this->tableName . ' (rua, numero, complemento, bairro, cep, cidade, estado) VALUES (:rua, :numero, :complemento, :bairro, :cep, :cidade, :estado)');
+        $stmt->bindValue(':rua', $endereco->getRua());
+        $stmt->bindValue(':numero', $endereco->getNumero());
+        $stmt->bindValue(':complemento', $endereco->getComplemento());
+        $stmt->bindValue(':bairro', $endereco->getBairro());
+        $stmt->bindValue(':cep', $endereco->getCep());
+        $stmt->bindValue(':cidade', $endereco->getCidade());
+        $stmt->bindValue(':estado', $endereco->getEstado());
 
-        return $stmt->execute();
+        $stmt->execute();
+        
+        return $this->conn->lastInsertId();
     }
 
     public function altera(&$endereco)
     {
-        $stmt = $this->conn->prepare('UPDATE ' . $this->tableName . ' SET nome = :nome, descricao = :descricao, telefone = :telefone, email = :email WHERE id = :id');
-        $stmt->bindValue(':nome', $endereco->getNome());
-        $stmt->bindValue(':descricao', $endereco->getDescricao());
-        $stmt->bindValue(':telefone', $endereco->getTelefone());
-        $stmt->bindValue(':email', $endereco->getEmail());
+        $stmt = $this->conn->prepare('UPDATE ' . $this->tableName . ' SET rua = :rua, numero = :numero, complemento = :complemento, bairro = :bairro, cep = :cep, cidade = :cidade, estado = :estado WHERE id = :id');
+        $stmt->bindValue(':rua', $endereco->getRua());
+        $stmt->bindValue(':numero', $endereco->getNumero());
+        $stmt->bindValue(':complemento', $endereco->getComplemento());
+        $stmt->bindValue(':bairro', $endereco->getBairro());
+        $stmt->bindValue(':cep', $endereco->getCep());
+        $stmt->bindValue(':cidade', $endereco->getCidade());
+        $stmt->bindValue(':estado', $endereco->getEstado());
         $stmt->bindValue(':id', $endereco->getId());
 
         return $stmt->execute();
@@ -42,23 +64,25 @@ class EnderecoDAO extends ClasseDAO implements IEnderecoDao
 
     public function buscaPorId($id)
     {
-        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email FROM ' . $this->tableName . ' WHERE id = :id LIMIT 1');
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' WHERE id = :id LIMIT 1');
         $stmt->bindValue(':id', $id);
         $stmt->execute();
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? new Endereco($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email']) : null;
+        return $row ? new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']) : null;
     }
 
-    public function buscaPorNome($nome)
+    // ── Métodos refatorados (Buscando pela Rua) ──────────────────────────────────
+
+    public function buscaPorRua($rua)
     {
-        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email FROM ' . $this->tableName . ' WHERE nome LIKE :nome ORDER BY nome');
-        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' WHERE rua LIKE :rua ORDER BY rua');
+        $stmt->bindValue(':rua', '%' . $rua . '%');
         $stmt->execute();
 
         $enderecos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $enderecos[] = new Endereco($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email']);
+            $enderecos[] = new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']);
         }
 
         return $enderecos;
@@ -66,12 +90,12 @@ class EnderecoDAO extends ClasseDAO implements IEnderecoDao
 
     public function buscaTodos()
     {
-        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email FROM ' . $this->tableName . ' ORDER BY id ASC');
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' ORDER BY id ASC');
         $stmt->execute();
 
         $enderecos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $enderecos[] = new Endereco($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email']);
+            $enderecos[] = new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']);
         }
 
         return $enderecos;
@@ -86,40 +110,40 @@ class EnderecoDAO extends ClasseDAO implements IEnderecoDao
         return (int) $stmt->fetchColumn();
     }
 
-    public function contaPorNome($nome)
+    public function contaPorRua($rua)
     {
-        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE nome LIKE :nome');
-        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt = $this->conn->prepare('SELECT COUNT(*) FROM ' . $this->tableName . ' WHERE rua LIKE :rua');
+        $stmt->bindValue(':rua', '%' . $rua . '%');
         $stmt->execute();
         return (int) $stmt->fetchColumn();
     }
 
     public function buscaTodosPaginado($limit, $offset)
     {
-        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' ORDER BY id ASC LIMIT :limit OFFSET :offset');
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         $enderecos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $enderecos[] = new Endereco($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email']);
+            $enderecos[] = new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']);
         }
 
         return $enderecos;
     }
 
-    public function buscaPorNomePaginado($nome, $limit, $offset)
+    public function buscaPorRuaPaginado($rua, $limit, $offset)
     {
-        $stmt = $this->conn->prepare('SELECT id, nome, descricao, telefone, email FROM ' . $this->tableName . ' WHERE nome LIKE :nome ORDER BY nome LIMIT :limit OFFSET :offset');
-        $stmt->bindValue(':nome', '%' . $nome . '%');
+        $stmt = $this->conn->prepare('SELECT id, rua, numero, complemento, bairro, cep, cidade, estado FROM ' . $this->tableName . ' WHERE rua LIKE :rua ORDER BY rua LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':rua', '%' . $rua . '%');
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         $enderecos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $enderecos[] = new Endereco($row['id'], $row['nome'], $row['descricao'], $row['telefone'], $row['email']);
+            $enderecos[] = new Endereco($row['id'], $row['rua'], $row['numero'], $row['complemento'], $row['bairro'], $row['cep'], $row['cidade'], $row['estado']);
         }
 
         return $enderecos;
