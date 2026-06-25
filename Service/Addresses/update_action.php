@@ -24,5 +24,9 @@ try {
     set_flash_message('danger', 'Não foi possível atualizar este endereço.');
 }
 
-header('Location: /Pages/Addresses/list.php');
+if (isset($_POST['checkout']) && $_POST['checkout'] == '1') {
+    header('Location: /Pages/Products/checkout.php');
+} else {
+    header('Location: /Pages/Addresses/list.php');
+}
 exit;

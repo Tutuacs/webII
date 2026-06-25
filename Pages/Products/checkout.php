@@ -9,7 +9,6 @@ ensure_session_started();
 $page_title = 'Checkout - Finalizar Compra';
 $cartService = new CartService($factory);
 
-
 $validation = $cartService->validateCart();
 if (!$validation['success']) {
     header('Location: /Pages/Products/cart.php');
@@ -19,15 +18,32 @@ if (!$validation['success']) {
 $cartItems = $cartService->getCartItems();
 $cartTotal = $cartService->getCartTotal();
 $isLogged = isset($_SESSION['id_usuario']);
+$nomeSessao = isset($_SESSION['nome_usuario']) ? $_SESSION['nome_usuario'] : '';
 $clienteId = isset($_SESSION['cliente_id']) ? (int)$_SESSION['cliente_id'] : null;
 
 // Se logado, tenta buscar os dados para liberação do pedido
 $cliente = null;
-$isEnderecoEntrega = false; // Marcador para saber se pegamos dados da tabela endereco
+$enderecoObj = null; // Nova variável para guardar os dados da Rua, Número, etc.
+$isEnderecoEntrega = false; 
 
 if ($isLogged && $clienteId) {
     try {
         $cliente = $factory->getClienteDao()->buscaPorId($clienteId);
+        
+        // Tenta resgatar o endereço oficial se o cliente existir
+        if ($cliente) {
+            $enderecoId = null;
+            if (method_exists($cliente, 'getEnderecoId')) {
+                $enderecoId = $cliente->getEnderecoId();
+            } elseif (method_exists($cliente, 'getEndereco') && $cliente->getEndereco()) {
+                $enderecoId = $cliente->getEndereco()->getId();
+            } else {
+                $enderecoId = $clienteId; // Fallback
+            }
+            if ($enderecoId) {
+                $enderecoObj = $factory->getEnderecoDao()->buscaPorId($enderecoId);
+            }
+        }
     } catch (Throwable $e) {
         $cliente = null;
     }
@@ -36,6 +52,7 @@ if ($isLogged && $clienteId) {
         try {
             $enderecoEntrega = $factory->getEnderecoDao()->buscaPorId($clienteId);
             if ($enderecoEntrega) {
+                $enderecoObj = $enderecoEntrega; // Guarda o objeto completo
                 $cliente = new class($enderecoEntrega) {
                     private $end;
                     public function __construct($end) { $this->end = $end; }
@@ -43,7 +60,7 @@ if ($isLogged && $clienteId) {
                     public function getNome() { return $this->end->getNome(); }
                     public function getTelefone() { return $this->end->getTelefone() ?? '(Não informado)'; }
                     public function getEmail() { return $this->end->getEmail() ?? '(Anônimo)'; }
-                    public function getCartaoCredito() { return '0000000000001234'; } // Mock padrão para passar na view
+                    public function getCartaoCredito() { return '0000000000001234'; } 
                 };
                 $isEnderecoEntrega = true;
             }
@@ -145,7 +162,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
             <?php } elseif ($cliente) { ?>
                 <div class="alert alert-success">
                     <p><strong>✓ Dados de Entrega Confirmados!</strong></p>
-                    <p>Olá, <?php echo htmlspecialchars($cliente->getNome(), ENT_QUOTES, 'UTF-8'); ?>. Revise os dados locais de envio abaixo.</p>
+                    <p>Olá, <?php echo htmlspecialchars($nomeSessao, ENT_QUOTES, 'UTF-8'); ?>. Revise os dados locais de envio abaixo.</p>
                 </div>
 
                 <div class="panel panel-default">
@@ -155,16 +172,29 @@ include_once __DIR__ . '/../Common/layout_header.php';
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Recebedor/Local:</strong> <?php echo htmlspecialchars($cliente->getNome(), ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p><strong>Comprador:</strong> <?php echo htmlspecialchars($nomeSessao, ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p><strong>Recebedor no Local:</strong> <?php echo htmlspecialchars($cliente->getNome(), ENT_QUOTES, 'UTF-8'); ?></p>
                                 <p><strong>Telefone Contato:</strong> <?php echo htmlspecialchars($cliente->getTelefone(), ENT_QUOTES, 'UTF-8'); ?></p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Email Notificação:</strong> <?php echo htmlspecialchars($cliente->getEmail(), ENT_QUOTES, 'UTF-8'); ?></p>
                                 <p><strong>Pagamento:</strong> Cartão de Crédito (Final <?php echo substr($cliente->getCartaoCredito(), -4); ?>)</p>
                             </div>
+                            <div class="col-md-6">
+                                <?php if ($enderecoObj) { ?>
+                                    <p><strong>Endereço:</strong> <?php echo htmlspecialchars($enderecoObj->getRua() . ', ' . $enderecoObj->getNumero(), ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php if(method_exists($enderecoObj, 'getComplemento') && $enderecoObj->getComplemento()) echo ' - ' . htmlspecialchars($enderecoObj->getComplemento(), ENT_QUOTES, 'UTF-8'); ?></p>
+                                    
+                                    <p><strong>Bairro:</strong> <?php echo method_exists($enderecoObj, 'getBairro') ? htmlspecialchars($enderecoObj->getBairro(), ENT_QUOTES, 'UTF-8') : ''; ?> | <strong>CEP:</strong> <?php echo method_exists($enderecoObj, 'getCep') ? htmlspecialchars($enderecoObj->getCep(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
+                                    
+                                    <p><strong>Cidade/UF:</strong> <?php echo method_exists($enderecoObj, 'getCidade') ? htmlspecialchars($enderecoObj->getCidade(), ENT_QUOTES, 'UTF-8') : ''; ?><?php echo method_exists($enderecoObj, 'getEstado') ? '/' . htmlspecialchars($enderecoObj->getEstado(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
+                                <?php } else { ?>
+                                    <p class="text-danger">Detalhes do endereço não encontrados.</p>
+                                <?php } ?>
+                            </div>
                         </div>
-                        <a href="/Pages/Addresses/list.php" class="btn btn-xs btn-info">
-                            <span class="glyphicon glyphicon-search"></span> Alterar Local de Entrega
+                        
+                        <hr style="margin: 10px 0;">
+                        
+                        <a href="/Pages/Addresses/edit.php?id=<?php echo $enderecoObj ? $enderecoObj->getId() : ''; ?>&checkout=1" class="btn btn-sm btn-info">
+                            <span class="glyphicon glyphicon-edit"></span> Editar Meu Endereço
                         </a>
                     </div>
                 </div>
@@ -173,7 +203,13 @@ include_once __DIR__ . '/../Common/layout_header.php';
                     <a href="/Pages/Products/cart.php" class="btn btn-default">
                         <span class="glyphicon glyphicon-arrow-left"></span> Voltar ao Carrinho
                     </a>
+                    
                     <form method="POST" action="/Service/Products/checkout_action.php" style="display: inline;">
+                        <input type="hidden" name="nome" value="<?php echo htmlspecialchars($nomeSessao, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="email" value="<?php echo htmlspecialchars($cliente->getEmail(), ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="telefone" value="<?php echo htmlspecialchars($cliente->getTelefone(), ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" name="cartao_credito" value="<?php echo htmlspecialchars($cliente->getCartaoCredito(), ENT_QUOTES, 'UTF-8'); ?>">
+                        
                         <button type="submit" class="btn btn-success btn-lg">
                             <span class="glyphicon glyphicon-shopping-cart"></span> Confirmar e Gerar Pedido
                         </button>

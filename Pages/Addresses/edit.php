@@ -13,6 +13,10 @@ if (!$endereco) {
     exit;
 }
 
+// Verifica se a requisição veio do fluxo de checkout
+$isCheckout = isset($_GET['checkout']) && $_GET['checkout'] == '1';
+$cancelarLink = $isCheckout ? '/Pages/Products/checkout.php' : '/Pages/Addresses/list.php';
+
 $page_title = 'Editar Endereço';
 include_once __DIR__ . '/../Common/layout_header.php';
 ?>
@@ -20,6 +24,8 @@ include_once __DIR__ . '/../Common/layout_header.php';
     <div class="col-md-8 col-md-offset-2">
         <form action="/Service/Addresses/update_action.php" method="post" class="panel panel-default" style="padding:20px;">
             <input type="hidden" name="id" value="<?php echo $endereco->getId(); ?>">
+            
+            <input type="hidden" name="checkout" value="<?php echo $isCheckout ? '1' : '0'; ?>">
             
             <h4 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Endereço Físico</h4>
 
@@ -64,7 +70,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 <button type="submit" class="btn btn-primary">
                     <span class="glyphicon glyphicon-refresh"></span> Atualizar
                 </button>
-                <a href="/Pages/Addresses/list.php" class="btn btn-default">Cancelar</a>
+                <a href="<?php echo $cancelarLink; ?>" class="btn btn-default">Cancelar</a>
             </div>
         </form>
     </div>

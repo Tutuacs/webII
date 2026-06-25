@@ -32,6 +32,7 @@ $itensNoCarrinho = $navbarCartService->getCartItemCount();
                 <li><a href="/Pages/Users/list.php">Usuários</a></li>
                 <li><a href="/Pages/Suppliers/list.php">Fornecedores</a></li>
                 <li><a href="/Pages/Addresses/list.php">Endereços</a></li>
+                <li><a href="/Pages/Orders/admin_list.php">Pedidos</a></li>
             <?php } ?>
         </ul>
 
@@ -62,6 +63,7 @@ $itensNoCarrinho = $navbarCartService->getCartItemCount();
                 $perfil = $roleUsuario ? ' (' . $roleUsuario . ')' : '';
             ?>
                 <li class="navbar-text">Olá, <?php echo htmlspecialchars($_SESSION['nome_usuario'] . $perfil, ENT_QUOTES, 'UTF-8'); ?></li>
+                <li><a href="/Pages/Orders/my_orders.php">Meus Pedidos</a></li>
                 <li><a href="/Service/Auth/logout_action.php">Sair</a></li>
             <?php } else { ?>
                 <li><a href="<?php echo htmlspecialchars($loginHref, ENT_QUOTES, 'UTF-8'); ?>">Entrar</a></li>

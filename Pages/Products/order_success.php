@@ -68,7 +68,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                         <a href="/index.php" class="btn btn-default">
                             <span class="glyphicon glyphicon-shopping-cart"></span> Continuar Comprando
                         </a>
-                        <a href="/Pages/Products/list.php" class="btn btn-primary">
+                        <a href="/Pages/Orders/my_orders.php" class="btn btn-primary">
                             <span class="glyphicon glyphicon-th-list"></span> Meus Pedidos
                         </a>
                     </div>

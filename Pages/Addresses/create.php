@@ -3,6 +3,13 @@
 require_once __DIR__ . '/../../Service/Auth/session.php';
 require_internal_user();
 
+// 1. Puxa o nome do usuário logado da sessão
+$nomeSessao = isset($_SESSION['nome_usuario']) ? $_SESSION['nome_usuario'] : '';
+
+// 2. Verifica se estamos no fluxo de checkout para arrumar o botão Cancelar
+$isCheckout = isset($_GET['checkout']) || isset($_POST['checkout']);
+$cancelarLink = $isCheckout ? '/Pages/Products/checkout.php' : '/Pages/Addresses/list.php';
+
 $page_title = 'Novo Cadastro de Cliente e Entrega';
 include_once __DIR__ . '/../Common/layout_header.php';
 ?>
@@ -10,7 +17,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
     <div class="col-md-8 col-md-offset-2">
         <form action="/Service/Addresses/create_action.php" method="post" class="panel panel-default" style="padding:20px;">
             
-            <?php if (isset($_GET['checkout']) || isset($_POST['checkout'])): ?>
+            <?php if ($isCheckout): ?>
                 <input type="hidden" name="checkout" value="1">
             <?php endif; ?>
 
@@ -18,7 +25,12 @@ include_once __DIR__ . '/../Common/layout_header.php';
             
             <div class="form-group">
                 <label for="nome">Nome Completo</label>
-                <input type="text" id="nome" name="nome" class="form-control" required>
+                <input type="text" id="nome" name="nome" class="form-control" 
+                       value="<?php echo htmlspecialchars($nomeSessao, ENT_QUOTES, 'UTF-8'); ?>" 
+                       <?php echo $nomeSessao ? 'readonly' : 'required'; ?>>
+                <?php if ($nomeSessao): ?>
+                    <small class="text-muted">Dados automáticos do login</small>
+                <?php endif; ?>
             </div>
             
             <div class="row">
@@ -80,7 +92,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 <button type="submit" class="btn btn-primary">
                     <span class="glyphicon glyphicon-floppy-disk"></span> Guardar
                 </button>
-                <a href="/Pages/Addresses/list.php" class="btn btn-default">Cancelar</a>
+                <a href="<?php echo $cancelarLink; ?>" class="btn btn-default">Cancelar</a>
             </div>
         </form>
     </div>
