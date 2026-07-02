@@ -7,7 +7,32 @@ require_internal_user();
 
 $page_title = 'Gestão de Pedidos (Admin)';
 include_once __DIR__ . '/../Common/layout_header.php';
+
+
 ?>
+
+<style>
+    .modal-body {
+        background-color: #fcfcfc;
+    }
+
+    .carousel-control {
+        background-image: none !important;
+        color: #333 !important;
+    }
+
+    .carousel-control:hover {
+        color: #000 !important;
+    }
+
+    .list-group-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px !important;
+        margin-bottom: 5px;
+    }
+</style>
+
 
 <div class="container" style="margin-top: 30px;">
     <h2><span class="glyphicon glyphicon-list-alt"></span> Gestão de Pedidos</h2>
@@ -202,13 +227,24 @@ function abrirDetalhes(index) {
                     const valorTotalItem = (item.quantidade * item.preco).toFixed(2).replace('.', ',');
                     const precoUnitario = parseFloat(item.preco).toFixed(2).replace('.', ',');
                     
-                    lista.innerHTML += `
-                        <li class="list-group-item">
-                            <strong>${item.produto_nome}</strong><br>
-                            <small>${item.produto_descricao}</small><br>
-                            Qtd: ${item.quantidade} | Unitário: R$ ${precoUnitario} | <strong>Total: R$ ${valorTotalItem}</strong>
-                        </li>
-                    `;
+                     lista.innerHTML += `
+                            <li class="list-group-item" style="border-left: 5px solid #337ab7; margin-bottom: 10px; border-radius: 4px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="text-align: left; flex-grow: 1;">
+                                        <h5 style="margin: 0 0 4px 0; font-weight: bold; color: #333;">${item.produto_nome}</h5>
+                                        <small style="color: #666; display: block; margin-bottom: 8px;">${item.produto_descricao}</small>
+                                    </div>
+                                    
+                                    <span class="label label-primary" style="font-size: 13px; padding: 6px 12px; margin-left: 15px; flex-shrink: 0;">
+                                        Qtd: ${item.quantidade}
+                                    </span>
+                                </div>
+                                
+                                <div style="border-top: 1px solid #eee; padding-top: 8px; font-size: 13px; color: #555; text-align: left;">
+                                    Unit: R$ ${precoUnitario} | <strong>Total: R$ ${valorTotalItem}</strong>
+                                </div>
+                            </li>
+                        `;
 
                     const activeClass = i === 0 ? 'active' : '';
                     const srcFoto = item.foto_base64 ? `data:image/jpeg;base64,${item.foto_base64}` : 'https://via.placeholder.com/400x200?text=Sem+Foto';
