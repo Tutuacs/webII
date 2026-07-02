@@ -20,30 +20,27 @@ if ($pedido_id <= 0) {
 }
 
 try {
-    // Puxa a conexão PDO que já foi criada no seu config/app.php
     $conn = $factory->getConnection();
-    
-    // Passa a conexão obrigatoriamente para o construtor da ClasseDAO
     $itemPedidoDAO = new ItemPedidoDAO($conn); 
     
-    // Busca os itens do banco
-    $itens = $itemPedidoDAO->buscaPorPedidoId($pedido_id);
+    $itens = $itemPedidoDAO->buscaItensComProdutoPorPedidoId($pedido_id);
     
     $dados = [];
     if (!empty($itens)) {
         foreach ($itens as $item) {
             $dados[] = [
-                'produto_id' => $item->getProdutoId(),
-                'quantidade' => $item->getQuantidade(),
-                'preco'      => $item->getPreco()
+                'produto_nome'      => $item['produto_nome'],      
+                'produto_descricao' => $item['produto_descricao'], 
+                'quantidade'        => $item['quantidade'],
+                'preco'             => $item['preco'],
+                'foto_base64'       => $item['foto'] ? base64_encode($item['foto']) : null
             ];
         }
     }
 
-    // Devolve o JSON bonitinho para o JavaScript montar o modal
     echo json_encode(['itens' => $dados]);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['erro' => 'Erro interno no servidor: ' . $e->getMessage()]);
+    echo json_encode(['erro' => 'Erro: ' . $e->getMessage()]);
 }

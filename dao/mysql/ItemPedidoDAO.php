@@ -138,4 +138,19 @@ class ItemPedidoDAO extends ClasseDAO implements IItemPedidoDao
 
         return $itens;
     }
+
+    public function buscaItensComProdutoPorPedidoId($pedidoId)
+    {
+    // Usamos um JOIN para trazer os dados do produto junto com o item
+    $sql = 'SELECT i.*, p.nome as produto_nome, p.descricao as produto_descricao, p.foto 
+            FROM item_pedido i 
+            JOIN produto p ON i.produto_id = p.id 
+            WHERE i.pedido_id = :pedido_id';
+            
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindValue(':pedido_id', $pedidoId, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna um array associativo direto
+}
 }

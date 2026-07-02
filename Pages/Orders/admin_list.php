@@ -140,8 +140,6 @@ function buscarPedidos() {
 // Função para exibir o DETALHE e montar o CARROSSEL
 function abrirDetalhes(index) {
     const pedido = pedidosRecentes[index];
-    
-    // Pega o ID (ajuste para pedido.id se a sua api principal retornar como 'id' ao invés de 'pedido_numero')
     const idDoPedido = pedido.pedido_numero || pedido.id; 
     
     document.getElementById('modalPedidoNumero').innerText = '#' + idDoPedido;
@@ -149,12 +147,10 @@ function abrirDetalhes(index) {
     const lista = document.getElementById('listaItensPedido');
     const carrossel = document.getElementById('carrosselInner');
     
-    // 1. Mostra o modal IMEDIATAMENTE com estado de carregamento
     lista.innerHTML = '<li class="list-group-item text-center"><strong>Carregando itens...</strong></li>';
     carrossel.innerHTML = '';
     $('#modalDetalhes').modal('show');
 
-    // 2. Faz a requisição AJAX buscando os itens específicos deste pedido
     fetch('/Service/Orders/api_itens_pedido.php?pedido_id=' + idDoPedido)
         .then(response => response.json())
         .then(data => {
@@ -163,37 +159,38 @@ function abrirDetalhes(index) {
 
             if (data.itens && data.itens.length > 0) {
                 data.itens.forEach((item, i) => {
-                    // Calcula os totais (Qtd * Preço)
+                  
                     const valorTotalItem = (item.quantidade * item.preco).toFixed(2).replace('.', ',');
                     const precoUnitario = parseFloat(item.preco).toFixed(2).replace('.', ',');
                     
-                    // Preenche a lista HTML
                     lista.innerHTML += `
                         <li class="list-group-item">
-                            <strong>Produto ID: ${item.produto_id}</strong><br>
+                            <strong>${item.produto_nome}</strong><br>
+                            <small>${item.produto_descricao}</small><br>
                             Qtd: ${item.quantidade} | Unitário: R$ ${precoUnitario} | <strong>Total: R$ ${valorTotalItem}</strong>
                         </li>
                     `;
 
-                    // Preenche o Carrossel
                     const activeClass = i === 0 ? 'active' : '';
+                    const srcFoto = item.foto_base64 ? `data:image/jpeg;base64,${item.foto_base64}` : 'https://via.placeholder.com/400x200?text=Sem+Foto';
+                    
                     carrossel.innerHTML += `
                         <div class="item ${activeClass}">
-                            <img src="https://via.placeholder.com/400x200?text=Produto+${item.produto_id}" alt="Foto Produto" style="margin: 0 auto; max-height: 250px;">
+                            <img src="${srcFoto}" alt="Foto Produto" style="margin: 0 auto; max-height: 200px;">
                             <div class="carousel-caption" style="color: #333; background: rgba(255,255,255,0.8); border-radius: 4px; padding: 2px 10px;">
-                                Qtd: ${item.quantidade} | R$ ${valorTotalItem}
+                                ${item.produto_nome}
                             </div>
                         </div>
                     `;
                 });
             } else {
-                lista.innerHTML = '<li class="list-group-item">Nenhum item encontrado para este pedido.</li>';
+                lista.innerHTML = '<li class="list-group-item">Nenhum item encontrado.</li>';
                 carrossel.innerHTML = '<div class="item active"><img src="https://via.placeholder.com/400x200?text=Sem+Itens" style="margin: 0 auto;"></div>';
             }
         })
         .catch(error => {
-            console.error("Erro no AJAX ao buscar itens:", error);
-            lista.innerHTML = '<li class="list-group-item text-danger">Erro de conexão ao carregar os itens.</li>';
+            console.error("Erro no AJAX:", error);
+            lista.innerHTML = '<li class="list-group-item text-danger">Erro ao carregar os itens.</li>';
         });
 }
 
