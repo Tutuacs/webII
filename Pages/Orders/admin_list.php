@@ -83,6 +83,9 @@ include_once __DIR__ . '/../Common/layout_header.php';
     </div>
 </div>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
 <script>
 // Variável global para armazenar os dados cacheados da API
 let pedidosRecentes = [];
@@ -116,7 +119,7 @@ function buscarPedidos() {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>#${pedido.pedido_numero}</strong></td>
-                    <td>${pedido.data_pedido}</td>
+                   <td>${formatarDataBR(pedido.data_pedido)}</td>
                     <td>${pedido.cliente_nome}</td>
                     <td><span class="label label-info">${pedido.situacao}</span></td>
                     <td>
@@ -137,39 +140,69 @@ function buscarPedidos() {
 // Função para exibir o DETALHE e montar o CARROSSEL
 function abrirDetalhes(index) {
     const pedido = pedidosRecentes[index];
-    document.getElementById('modalPedidoNumero').innerText = '#' + pedido.pedido_numero;
+    
+    // Pega o ID (ajuste para pedido.id se a sua api principal retornar como 'id' ao invés de 'pedido_numero')
+    const idDoPedido = pedido.pedido_numero || pedido.id; 
+    
+    document.getElementById('modalPedidoNumero').innerText = '#' + idDoPedido;
 
     const lista = document.getElementById('listaItensPedido');
     const carrossel = document.getElementById('carrosselInner');
     
-    lista.innerHTML = '';
+    // 1. Mostra o modal IMEDIATAMENTE com estado de carregamento
+    lista.innerHTML = '<li class="list-group-item text-center"><strong>Carregando itens...</strong></li>';
     carrossel.innerHTML = '';
-
-    if (pedido.itens && pedido.itens.length > 0) {
-        pedido.itens.forEach((item, i) => {
-            // Adiciona na lista
-            lista.innerHTML += `<li class="list-group-item">
-                Produto ID: ${item.produto_id} | Qtd: ${item.quantidade} | R$ ${parseFloat(item.preco).toFixed(2).replace('.', ',')}
-            </li>`;
-
-            // Adiciona foto no carrossel
-            // TODO: Substituir o src abaixo pelo caminho real da foto do produto, ex: /images/produtos/prod_${item.produto_id}.jpg
-            const activeClass = i === 0 ? 'active' : '';
-            carrossel.innerHTML += `
-                <div class="item ${activeClass}">
-                    <img src="https://via.placeholder.com/400x200?text=Produto+ID+${item.produto_id}" alt="Foto Produto" style="margin: 0 auto;">
-                    <div class="carousel-caption" style="color: black;">
-                        Qtd: ${item.quantidade}
-                    </div>
-                </div>
-            `;
-        });
-    } else {
-        lista.innerHTML = '<li class="list-group-item">Sem itens registrados.</li>';
-        carrossel.innerHTML = '<div class="item active"><img src="https://via.placeholder.com/400x200?text=Sem+Fotos" style="margin: 0 auto;"></div>';
-    }
-
     $('#modalDetalhes').modal('show');
+
+    // 2. Faz a requisição AJAX buscando os itens específicos deste pedido
+    fetch('/Service/Orders/api_itens_pedido.php?pedido_id=' + idDoPedido)
+        .then(response => response.json())
+        .then(data => {
+            lista.innerHTML = '';
+            carrossel.innerHTML = '';
+
+            if (data.itens && data.itens.length > 0) {
+                data.itens.forEach((item, i) => {
+                    // Calcula os totais (Qtd * Preço)
+                    const valorTotalItem = (item.quantidade * item.preco).toFixed(2).replace('.', ',');
+                    const precoUnitario = parseFloat(item.preco).toFixed(2).replace('.', ',');
+                    
+                    // Preenche a lista HTML
+                    lista.innerHTML += `
+                        <li class="list-group-item">
+                            <strong>Produto ID: ${item.produto_id}</strong><br>
+                            Qtd: ${item.quantidade} | Unitário: R$ ${precoUnitario} | <strong>Total: R$ ${valorTotalItem}</strong>
+                        </li>
+                    `;
+
+                    // Preenche o Carrossel
+                    const activeClass = i === 0 ? 'active' : '';
+                    carrossel.innerHTML += `
+                        <div class="item ${activeClass}">
+                            <img src="https://via.placeholder.com/400x200?text=Produto+${item.produto_id}" alt="Foto Produto" style="margin: 0 auto; max-height: 250px;">
+                            <div class="carousel-caption" style="color: #333; background: rgba(255,255,255,0.8); border-radius: 4px; padding: 2px 10px;">
+                                Qtd: ${item.quantidade} | R$ ${valorTotalItem}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                lista.innerHTML = '<li class="list-group-item">Nenhum item encontrado para este pedido.</li>';
+                carrossel.innerHTML = '<div class="item active"><img src="https://via.placeholder.com/400x200?text=Sem+Itens" style="margin: 0 auto;"></div>';
+            }
+        })
+        .catch(error => {
+            console.error("Erro no AJAX ao buscar itens:", error);
+            lista.innerHTML = '<li class="list-group-item text-danger">Erro de conexão ao carregar os itens.</li>';
+        });
+}
+
+function formatarDataBR(dataISO) {
+    if (!dataISO) return '';
+    // Divide a data e a hora
+    const [data, hora] = dataISO.split(' ');
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}/${mes}/${ano} ${hora}`;
 }
 
 function limparBusca() {
