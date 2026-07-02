@@ -6,11 +6,13 @@ RewriteRule ^pedidos/([0-9]+)/itens$ Service/Orders/api_itens_pedido.php?pedido_
 # 2. API: /pedidos/1 -> detalhe de um pedido
 RewriteRule ^pedidos/([0-9]+)$ Service/Orders/api_consulta.php?numero=$1 [NC,L]
 
-# 3. API: /pedidos -> listar todos os pedidos
-# Se alguém digitar /pedidos ou /pedidos/ sem o ID, chama a API sem filtros
+# 3. API: /pedidos/cliente/Nome -> busca por nome do cliente
+RewriteRule ^pedidos/cliente/([a-zA-Z0-9]+)$ Service/Orders/api_consulta.php?cliente=$1 [NC,L]
+
+# 4. API: /pedidos -> listar todos
 RewriteRule ^pedidos/?$ Service/Orders/api_consulta.php [NC,L]
 
-# 4. Regra padrão do site
+# 5. Regra padrão
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

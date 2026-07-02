@@ -144,10 +144,12 @@ function buscarPedidos() {
     const cliente = document.getElementById('buscaCliente').value;
     const numero = document.getElementById('buscaNumero').value;
     
-    let url = '/Service/Orders/api_consulta.php?';
-    if (numero) url += 'numero=' + numero;
-    else if (cliente) url += 'cliente=' + encodeURIComponent(cliente);
-    else url += 'cliente=';
+   let url = '/pedidos';
+    if (numero) {
+        url = '/pedidos/' + numero;
+    } else if (cliente) {
+        url = '/pedidos/cliente/' + encodeURIComponent(cliente);
+    }
 
     const tbody = document.getElementById('tabelaPedidos');
     tbody.innerHTML = '<tr><td colspan="5" class="text-center">Carregando pedidos...</td></tr>';
