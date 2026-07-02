@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../Service/Auth/session.php';
-require_internal_user();
+//require_internal_user();
 
 // 1. Puxa o nome do usuário logado da sessão
 $nomeSessao = isset($_SESSION['nome_usuario']) ? $_SESSION['nome_usuario'] : '';

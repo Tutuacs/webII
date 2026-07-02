@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     login VARCHAR(30) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     nome VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'INTERNO'
+    role VARCHAR(20) NOT NULL DEFAULT 'CLIENTE'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Tabela ENDEREÇO 
@@ -30,7 +30,10 @@ CREATE TABLE IF NOT EXISTS cliente (
     email VARCHAR(255),
     cartao_credito VARCHAR(20),
     endereco_id INT NOT NULL,
-    CONSTRAINT fk_cliente_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id) ON DELETE CASCADE
+    usuario_id INT NULL,
+    CONSTRAINT fk_cliente_endereco FOREIGN KEY (endereco_id) REFERENCES endereco(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cliente_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE SET NULL,
+    UNIQUE KEY uq_cliente_usuario (usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Tabela FORNECEDOR 
@@ -94,7 +97,7 @@ CREATE TABLE IF NOT EXISTS item_pedido (
 
 INSERT INTO usuario(login, senha, nome, role) VALUES 
 ('arthur','202cb962ac59075b964b07152d234b70','Arthur Silva','INTERNO'), 
-('vinicius','202cb962ac59075b964b07152d234b70','Vinicius Guilherme','INTERNO'); 
+('vinicius','202cb962ac59075b964b07152d234b70','Vinicius Guilherme','CLIENTE'); 
 
 INSERT INTO endereco (rua, numero, complemento, bairro, cep, cidade, estado) VALUES
 ('Rua Principal', '100', 'Sala 2', 'Centro', '95000-000', 'Caxias do Sul', 'RS'),

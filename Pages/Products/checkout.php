@@ -18,28 +18,28 @@ if (!$validation['success']) {
 $cartItems = $cartService->getCartItems();
 $cartTotal = $cartService->getCartTotal();
 $isLogged = isset($_SESSION['id_usuario']);
-$nomeSessao = isset($_SESSION['nome_usuario']) ? $_SESSION['nome_usuario'] : '';
 $clienteId = isset($_SESSION['cliente_id']) ? (int)$_SESSION['cliente_id'] : null;
 
-// Se logado, tenta buscar os dados para liberação do pedido
+// Busca os dados de entrega vinculados ao cliente da sessão
+// (funciona tanto para usuário logado quanto para checkout de convidado)
 $cliente = null;
-$enderecoObj = null; // Nova variável para guardar os dados da Rua, Número, etc.
-$isEnderecoEntrega = false; 
+$enderecoObj = null;
 
-if ($isLogged && $clienteId) {
+if ($clienteId) {
     try {
         $cliente = $factory->getClienteDao()->buscaPorId($clienteId);
-        
-        // Tenta resgatar o endereço oficial se o cliente existir
+
         if ($cliente) {
             $enderecoId = null;
+
             if (method_exists($cliente, 'getEnderecoId')) {
                 $enderecoId = $cliente->getEnderecoId();
             } elseif (method_exists($cliente, 'getEndereco') && $cliente->getEndereco()) {
                 $enderecoId = $cliente->getEndereco()->getId();
-            } else {
-                $enderecoId = $clienteId; // Fallback
             }
+            // Sem fallback: se nenhum método existir, é erro de mapeamento da entidade
+            // Cliente e precisa ser corrigido lá, não mascarado aqui.
+
             if ($enderecoId) {
                 $enderecoObj = $factory->getEnderecoDao()->buscaPorId($enderecoId);
             }
@@ -47,28 +47,12 @@ if ($isLogged && $clienteId) {
     } catch (Throwable $e) {
         $cliente = null;
     }
-
-    if (!$cliente) {
-        try {
-            $enderecoEntrega = $factory->getEnderecoDao()->buscaPorId($clienteId);
-            if ($enderecoEntrega) {
-                $enderecoObj = $enderecoEntrega; // Guarda o objeto completo
-                $cliente = new class($enderecoEntrega) {
-                    private $end;
-                    public function __construct($end) { $this->end = $end; }
-                    public function getId() { return $this->end->getId(); }
-                    public function getNome() { return $this->end->getNome(); }
-                    public function getTelefone() { return $this->end->getTelefone() ?? '(Não informado)'; }
-                    public function getEmail() { return $this->end->getEmail() ?? '(Anônimo)'; }
-                    public function getCartaoCredito() { return '0000000000001234'; } 
-                };
-                $isEnderecoEntrega = true;
-            }
-        } catch (Throwable $e) {
-            $cliente = null;
-        }
-    }
 }
+
+// Nome exibido: usa o nome da conta logada; se for checkout de convidado, usa o nome do cliente
+$nomeSessao = isset($_SESSION['nome_usuario'])
+    ? $_SESSION['nome_usuario']
+    : ($cliente ? $cliente->getNome() : '');
 
 include_once __DIR__ . '/../Common/layout_header.php';
 ?>
@@ -77,7 +61,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
     <div class="row">
         <div class="col-md-8">
             <h2><span class="glyphicon glyphicon-ok-sign"></span> Confirmação do Pedido</h2>
-            
+
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">Resumo dos Produtos</h3>
@@ -117,9 +101,9 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 </div>
             </div>
 
-            <?php if (!$isLogged) { ?>
+            <?php if (!$cliente && !$isLogged) { ?>
                 <div class="alert alert-warning">
-                    <h4><span class="glyphicon glyphicon-warning-sign"></span> Você precisa estar conectado para finalizar a compra</h4>
+                    <h4><span class="glyphicon glyphicon-warning-sign"></span> Você precisa estar conectado ou informar seus dados de entrega</h4>
                     <p>Escolha uma opção abaixo:</p>
                 </div>
 
@@ -181,18 +165,18 @@ include_once __DIR__ . '/../Common/layout_header.php';
                                 <?php if ($enderecoObj) { ?>
                                     <p><strong>Endereço:</strong> <?php echo htmlspecialchars($enderecoObj->getRua() . ', ' . $enderecoObj->getNumero(), ENT_QUOTES, 'UTF-8'); ?>
                                     <?php if(method_exists($enderecoObj, 'getComplemento') && $enderecoObj->getComplemento()) echo ' - ' . htmlspecialchars($enderecoObj->getComplemento(), ENT_QUOTES, 'UTF-8'); ?></p>
-                                    
+
                                     <p><strong>Bairro:</strong> <?php echo method_exists($enderecoObj, 'getBairro') ? htmlspecialchars($enderecoObj->getBairro(), ENT_QUOTES, 'UTF-8') : ''; ?> | <strong>CEP:</strong> <?php echo method_exists($enderecoObj, 'getCep') ? htmlspecialchars($enderecoObj->getCep(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
-                                    
+
                                     <p><strong>Cidade/UF:</strong> <?php echo method_exists($enderecoObj, 'getCidade') ? htmlspecialchars($enderecoObj->getCidade(), ENT_QUOTES, 'UTF-8') : ''; ?><?php echo method_exists($enderecoObj, 'getEstado') ? '/' . htmlspecialchars($enderecoObj->getEstado(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
                                 <?php } else { ?>
                                     <p class="text-danger">Detalhes do endereço não encontrados.</p>
                                 <?php } ?>
                             </div>
                         </div>
-                        
+
                         <hr style="margin: 10px 0;">
-                        
+
                         <a href="/Pages/Addresses/edit.php?id=<?php echo $enderecoObj ? $enderecoObj->getId() : ''; ?>&checkout=1" class="btn btn-sm btn-info">
                             <span class="glyphicon glyphicon-edit"></span> Editar Meu Endereço
                         </a>
@@ -203,13 +187,13 @@ include_once __DIR__ . '/../Common/layout_header.php';
                     <a href="/Pages/Products/cart.php" class="btn btn-default">
                         <span class="glyphicon glyphicon-arrow-left"></span> Voltar ao Carrinho
                     </a>
-                    
+
                     <form method="POST" action="/Service/Products/checkout_action.php" style="display: inline;">
                         <input type="hidden" name="nome" value="<?php echo htmlspecialchars($nomeSessao, ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="email" value="<?php echo htmlspecialchars($cliente->getEmail(), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="telefone" value="<?php echo htmlspecialchars($cliente->getTelefone(), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="cartao_credito" value="<?php echo htmlspecialchars($cliente->getCartaoCredito(), ENT_QUOTES, 'UTF-8'); ?>">
-                        
+
                         <button type="submit" class="btn btn-success btn-lg">
                             <span class="glyphicon glyphicon-shopping-cart"></span> Confirmar e Gerar Pedido
                         </button>
@@ -241,11 +225,11 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 <div class="panel-body">
                     <ul class="list-unstyled">
                         <li>
-                            <strong>Produtos:</strong> 
+                            <strong>Produtos:</strong>
                             <span class="pull-right"><?php echo count($cartItems); ?></span>
                         </li>
                         <li>
-                            <strong>Unidades:</strong> 
+                            <strong>Unidades:</strong>
                             <span class="pull-right"><?php echo array_sum(array_column($cartItems, 'quantidade')); ?></span>
                         </li>
                         <li style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">

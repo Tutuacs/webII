@@ -1,11 +1,12 @@
 <?php
-
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../Auth/session.php';
+// require_internal_user();
 
-require_internal_user();
+ensure_session_started();
 
 $veioDoCheckout = isset($_POST['checkout']) || isset($_GET['checkout']);
+$usuarioId = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : null;
 
 try {
     $rua         = isset($_POST['rua'])         ? trim($_POST['rua'])         : '';
@@ -24,14 +25,36 @@ try {
     $email          = isset($_POST['email'])          ? trim($_POST['email'])          : '';
     $cartao_credito = isset($_POST['cartao_credito']) ? trim($_POST['cartao_credito']) : '';
 
-    $stmt = $factory->getConnection()->prepare("INSERT INTO cliente (nome, telefone, email, cartao_credito, endereco_id) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$nome, $telefone, $email, $cartao_credito, $enderecoId]);
-    $clienteId = $factory->getConnection()->lastInsertId();
+    // Se o usuário já está logado, checa se ele já tem um cliente vinculado.
+    // Isso evita violar a UNIQUE(usuario_id) e evita criar clientes duplicados
+    // toda vez que o mesmo usuário passa por esse formulário de novo.
+    $clienteExistente = null;
+    if ($usuarioId) {
+        $clienteExistente = $factory->getClienteDao()->buscaPorUsuarioId($usuarioId);
+    }
+
+    if ($clienteExistente) {
+        // Atualiza o cliente/endereço já vinculados a esse usuário em vez de duplicar
+        $stmt = $factory->getConnection()->prepare(
+            "UPDATE cliente SET nome = ?, telefone = ?, email = ?, cartao_credito = ?, endereco_id = ? WHERE id = ?"
+        );
+        $stmt->execute([$nome, $telefone, $email, $cartao_credito, $enderecoId, $clienteExistente->getId()]);
+        $clienteId = $clienteExistente->getId();
+    } else {
+        $stmt = $factory->getConnection()->prepare(
+            "INSERT INTO cliente (nome, telefone, email, cartao_credito, endereco_id, usuario_id) VALUES (?, ?, ?, ?, ?, ?)"
+        );
+        // usuario_id fica NULL se for checkout de convidado (não logado)
+        $stmt->execute([$nome, $telefone, $email, $cartao_credito, $enderecoId, $usuarioId]);
+        $clienteId = $factory->getConnection()->lastInsertId();
+    }
+
+    if ($clienteId) {
+        $_SESSION['cliente_id'] = (int)$clienteId;
+    }
 
     if ($veioDoCheckout && $clienteId) {
-        $_SESSION['cliente_id'] = (int)$clienteId;
-        
-        set_flash_message('success', 'Perfil e endereço registados com sucesso!');
+        set_flash_message('success', 'Perfil e endereço registrados com sucesso!');
         header('Location: /Pages/Products/checkout.php');
         exit;
     }
@@ -43,7 +66,6 @@ try {
 } catch (Throwable $e) {
     error_log('Erro ao cadastrar cliente/endereço: ' . $e->getMessage());
     set_flash_message('danger', 'Erro no registo: ' . $e->getMessage());
-    
     if ($veioDoCheckout) {
         header('Location: /Pages/Addresses/create.php?checkout=1');
     } else {

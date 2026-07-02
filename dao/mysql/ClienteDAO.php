@@ -16,6 +16,16 @@ class ClienteDAO extends ClasseDAO implements IClienteDao
         return $stmt->execute();
     }
 
+    public function buscaPorUsuarioId($usuarioId)
+    {
+        $stmt = $this->conn->prepare('SELECT id, nome, telefone, email, cartao_credito, endereco_id FROM ' . $this->tableName . ' WHERE usuario_id = :usuario_id LIMIT 1');
+        $stmt->bindValue(':usuario_id', $usuarioId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? new Cliente($row['id'], $row['nome'], $row['telefone'], $row['email'], $row['cartao_credito'], $row['endereco_id']) : null;
+    }
+
     public function altera(&$cliente)
     {
         $stmt = $this->conn->prepare('UPDATE ' . $this->tableName . ' SET nome = :nome, telefone = :telefone, email = :email, cartao_credito = :cartao_credito, endereco_id = :endereco_id WHERE id = :id');

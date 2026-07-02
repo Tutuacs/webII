@@ -5,6 +5,8 @@ interface IClienteDao extends DAO
     public function contaPorNome($nome);
     public function buscaTodosPaginado($limit, $offset);
     public function buscaPorNomePaginado($nome, $limit, $offset);
+    public function buscaPorUsuarioId($usuarioId);
+
 }
 
 ?>
