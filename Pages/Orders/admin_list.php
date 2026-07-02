@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../Service/Auth/session.php';
 
-//Apenas Admin/Interno
+// Apenas Admin/Interno (Se der "Não autorizado", faça login novamente no sistema!)
 require_internal_user();
 
 $page_title = 'Gestão de Pedidos (Admin)';
@@ -39,7 +39,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                             <th>Data do Pedido</th>
                             <th>Cliente</th>
                             <th>Situação</th>
-                            <th>Ação</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaPedidos">
@@ -62,8 +62,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
             <div class="modal-body">
                 
                 <div id="carrosselProdutos" class="carousel slide" data-ride="carousel" style="margin-bottom: 20px; background: #f8f8f8; text-align: center;">
-                    <div class="carousel-inner" id="carrosselInner">
-                        </div>
+                    <div class="carousel-inner" id="carrosselInner"></div>
                     <a class="left carousel-control" href="#carrosselProdutos" data-slide="prev">
                         <span class="glyphicon glyphicon-chevron-left"></span>
                     </a>
@@ -73,11 +72,38 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 </div>
 
                 <h5>Itens Comprados:</h5>
-                <ul class="list-group" id="listaItensPedido">
-                    </ul>
+                <ul class="list-group" id="listaItensPedido"></ul>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStatus" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Alterar Status do Pedido <span id="statusPedidoNumero"></span></h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="statusIdPedido">
+                <div class="form-group">
+                    <label for="selectStatus">Nova Situação:</label>
+                    <select id="selectStatus" class="form-control">
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="PROCESSANDO">Em processamento</option>
+                        <option value="ENVIADO">Enviado</option>
+                        <option value="ENTREGUE">Entregue</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarStatusPedido()">Salvar</button>
             </div>
         </div>
     </div>
@@ -87,10 +113,8 @@ include_once __DIR__ . '/../Common/layout_header.php';
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
 <script>
-// Variável global para armazenar os dados cacheados da API
 let pedidosRecentes = [];
 
-// Função AJAX
 function buscarPedidos() {
     const cliente = document.getElementById('buscaCliente').value;
     const numero = document.getElementById('buscaNumero').value;
@@ -98,7 +122,7 @@ function buscarPedidos() {
     let url = '/Service/Orders/api_consulta.php?';
     if (numero) url += 'numero=' + numero;
     else if (cliente) url += 'cliente=' + encodeURIComponent(cliente);
-    else url += 'cliente='; // Busca vazia retorna todos (se a API permitir)
+    else url += 'cliente=';
 
     const tbody = document.getElementById('tabelaPedidos');
     tbody.innerHTML = '<tr><td colspan="5" class="text-center">Carregando pedidos...</td></tr>';
@@ -112,20 +136,37 @@ function buscarPedidos() {
             }
 
             pedidosRecentes = data.dados;
-            tbody.innerHTML = ''; // Limpa a tabela
+            tbody.innerHTML = '';
 
-            // Preenche a tabela 
             data.dados.forEach((pedido, index) => {
                 const tr = document.createElement('tr');
+                const idDoPedido = pedido.pedido_numero || pedido.id;
+                
+                // Definição dinâmica das cores das labels do Bootstrap
+                let labelClass = 'label-info';
+                if (pedido.situacao === 'ENTREGUE') labelClass = 'label-success';
+                if (pedido.situacao === 'CANCELADO') labelClass = 'label-danger';
+
+                // Mostra alteração de status enquanto não estiver finalizado/cancelado
+                let botaoStatus = '';
+                if (pedido.situacao !== 'ENTREGUE' && pedido.situacao !== 'CANCELADO') {
+                    botaoStatus = `
+                        <button class="btn btn-sm btn-info" onclick="abrirAlterarStatus(${index})">
+                            <span class="glyphicon glyphicon-edit"></span> Status
+                        </button>
+                    `;
+                }
+
                 tr.innerHTML = `
-                    <td><strong>#${pedido.pedido_numero}</strong></td>
-                   <td>${formatarDataBR(pedido.data_pedido)}</td>
+                    <td><strong>#${idDoPedido}</strong></td>
+                    <td>${formatarDataBR(pedido.data_pedido)}</td>
                     <td>${pedido.cliente_nome}</td>
-                    <td><span class="label label-info">${pedido.situacao}</span></td>
+                    <td><span class="label ${labelClass}">${pedido.situacao}</span></td>
                     <td>
                         <button class="btn btn-sm btn-success" onclick="abrirDetalhes(${index})">
                             <span class="glyphicon glyphicon-eye-open"></span> Ver Detalhes
                         </button>
+                        ${botaoStatus}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -133,11 +174,10 @@ function buscarPedidos() {
         })
         .catch(error => {
             console.error("Erro na requisição AJAX:", error);
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro de conexão com a API.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro de conexão com a API ou sessão expirada.</td></tr>';
         });
 }
 
-// Função para exibir o DETALHE e montar o CARROSSEL
 function abrirDetalhes(index) {
     const pedido = pedidosRecentes[index];
     const idDoPedido = pedido.pedido_numero || pedido.id; 
@@ -159,7 +199,6 @@ function abrirDetalhes(index) {
 
             if (data.itens && data.itens.length > 0) {
                 data.itens.forEach((item, i) => {
-                  
                     const valorTotalItem = (item.quantidade * item.preco).toFixed(2).replace('.', ',');
                     const precoUnitario = parseFloat(item.preco).toFixed(2).replace('.', ',');
                     
@@ -194,12 +233,48 @@ function abrirDetalhes(index) {
         });
 }
 
+function abrirAlterarStatus(index) {
+    const pedido = pedidosRecentes[index];
+    const idDoPedido = pedido.pedido_numero || pedido.id;
+
+    document.getElementById('statusPedidoNumero').innerText = '#' + idDoPedido;
+    document.getElementById('statusIdPedido').value = idDoPedido;
+    document.getElementById('selectStatus').value = pedido.situacao;
+
+    $('#modalStatus').modal('show');
+}
+
+function salvarStatusPedido() {
+    const idPedido = document.getElementById('statusIdPedido').value;
+    const novoStatus = document.getElementById('selectStatus').value;
+
+    fetch('/Service/Orders/api_alterar_status.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `pedido_id=${idPedido}&situacao=${encodeURIComponent(novoStatus)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.sucesso) {
+            $('#modalStatus').modal('hide');
+            buscarPedidos(); 
+        } else {
+            alert(data.erro || "Erro ao atualizar o status do pedido.");
+        }
+    })
+    .catch(error => {
+        console.error("Erro no processamento:", error);
+        alert("Erro de comunicação ao salvar o novo status.");
+    });
+}
+
 function formatarDataBR(dataISO) {
     if (!dataISO) return '';
-    // Divide a data e a hora
     const [data, hora] = dataISO.split(' ');
     const [ano, mes, dia] = data.split('-');
-    return `${dia}/${mes}/${ano} ${hora}`;
+    return hora ? `${dia}/${mes}/${ano} ${hora}` : `${dia}/${mes}/${ano}`;
 }
 
 function limparBusca() {

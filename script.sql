@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS pedido (
     id INT AUTO_INCREMENT PRIMARY KEY,
     data_pedido DATETIME NOT NULL,
     data_entrega DATE NULL,
-    situacao VARCHAR(50) NOT NULL DEFAULT 'NOVO',
+    situacao VARCHAR(50) NOT NULL DEFAULT 'PENDENTE',
     cliente_id INT NOT NULL,
     CONSTRAINT fk_pedido_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

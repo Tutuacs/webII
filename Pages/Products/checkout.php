@@ -37,8 +37,6 @@ if ($clienteId) {
             } elseif (method_exists($cliente, 'getEndereco') && $cliente->getEndereco()) {
                 $enderecoId = $cliente->getEndereco()->getId();
             }
-            // Sem fallback: se nenhum método existir, é erro de mapeamento da entidade
-            // Cliente e precisa ser corrigido lá, não mascarado aqui.
 
             if ($enderecoId) {
                 $enderecoObj = $factory->getEnderecoDao()->buscaPorId($enderecoId);
@@ -163,11 +161,10 @@ include_once __DIR__ . '/../Common/layout_header.php';
                             </div>
                             <div class="col-md-6">
                                 <?php if ($enderecoObj) { ?>
-                                    <p><strong>Endereço:</strong> <?php echo htmlspecialchars($enderecoObj->getRua() . ', ' . $enderecoObj->getNumero(), ENT_QUOTES, 'UTF-8'); ?>
-                                    <?php if(method_exists($enderecoObj, 'getComplemento') && $enderecoObj->getComplemento()) echo ' - ' . htmlspecialchars($enderecoObj->getComplemento(), ENT_QUOTES, 'UTF-8'); ?></p>
-
+                                    <p><strong>Endereço:</strong> <?php echo htmlspecialchars($enderecoObj->getRua() . ', ' . $enderecoObj->getNumero(), ENT_QUOTES, 'UTF-8'); ?><?php if(method_exists($enderecoObj, 'getComplemento') && $enderecoObj->getComplemento()) echo ' - ' . htmlspecialchars($enderecoObj->getComplemento(), ENT_QUOTES, 'UTF-8'); ?></p>
+                                    
                                     <p><strong>Bairro:</strong> <?php echo method_exists($enderecoObj, 'getBairro') ? htmlspecialchars($enderecoObj->getBairro(), ENT_QUOTES, 'UTF-8') : ''; ?> | <strong>CEP:</strong> <?php echo method_exists($enderecoObj, 'getCep') ? htmlspecialchars($enderecoObj->getCep(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
-
+                                    
                                     <p><strong>Cidade/UF:</strong> <?php echo method_exists($enderecoObj, 'getCidade') ? htmlspecialchars($enderecoObj->getCidade(), ENT_QUOTES, 'UTF-8') : ''; ?><?php echo method_exists($enderecoObj, 'getEstado') ? '/' . htmlspecialchars($enderecoObj->getEstado(), ENT_QUOTES, 'UTF-8') : ''; ?></p>
                                 <?php } else { ?>
                                     <p class="text-danger">Detalhes do endereço não encontrados.</p>
@@ -184,7 +181,7 @@ include_once __DIR__ . '/../Common/layout_header.php';
                 </div>
 
                 <div style="margin-top: 30px;">
-                    <a href="/Pages/Products/cart.php" class="btn btn-default">
+                    <a href="/Pages/Products/cart.php" class="btn btn-default" style="margin-right: 10px;">
                         <span class="glyphicon glyphicon-arrow-left"></span> Voltar ao Carrinho
                     </a>
 

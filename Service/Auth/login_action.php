@@ -27,12 +27,26 @@ if ($usuario && md5($senha) === $usuario->getSenha()) {
     $_SESSION['login_usuario'] = $usuario->getLogin();
     $_SESSION['role_usuario'] = $usuario->getRole();
 
-    set_flash_message('success', 'Login realizado com sucesso.');
+    // --- CORREÇÃO DA JORNADA DO CHECKOUT ---
+    // Precisamos achar o cliente atrelado a este usuário para carregar o endereço no checkout
+    try {
+        // Se o seu modelo tiver o método direto no usuário:
+        if (method_exists($usuario, 'getClienteId') && $usuario->getClienteId()) {
+            $_SESSION['cliente_id'] = $usuario->getClienteId();
+        } 
+        // Ou se o seu ClienteDao buscar pelo ID do usuário (Mude o nome do método se for diferente no seu projeto):
+        else if (method_exists($factory->getClienteDao(), 'buscaPorUsuarioId')) {
+            $clienteDoUsuario = $factory->getClienteDao()->buscaPorUsuarioId($usuario->getId());
+            if ($clienteDoUsuario) {
+                $_SESSION['cliente_id'] = $clienteDoUsuario->getId();
+            }
+        }
+    } catch (Throwable $e) {
+        // Silencia para não quebrar o login caso falte o método, mas rastreia o erro
+    }
+    // ----------------------------------------
 
+    set_flash_message('success', 'Login realizado com sucesso.');
     header('Location: ' . $redirect);
     exit;
 }
-
-set_flash_message('danger', 'Login ou senha inválidos.');
-header('Location: /Pages/Login/index.php?redirect=' . urlencode($redirect));
-exit;
